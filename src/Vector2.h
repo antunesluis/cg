@@ -1,46 +1,31 @@
-#ifndef __VECTOR_2_H__
-#define __VECTOR_2_H__
+#ifndef VECTOR_2_H
+#define VECTOR_2_H
+
+#include <cmath>
+#include <cstdio>
 
 class Vector2 {
 public:
   float x, y;
 
-  Vector2() { x = y = 0; }
+  // Construtores
+  Vector2();
+  Vector2(float _x, float _y);
 
-  Vector2(float _x, float _y) {
-    x = _x;
-    y = _y;
-  }
+  // Métodos
+  void set(float _x, float _y);
+  void normalize();
 
-  void set(float _x, float _y) {
-    x = _x;
-    y = _y;
-  }
+  // Operadores
+  Vector2 operator-(const Vector2 &v) const;
+  Vector2 operator+(const Vector2 &v) const;
+  Vector2 operator*(float scalar) const;
+  Vector2 operator/(float scalar) const;
+  bool operator==(const Vector2 &v) const;
 
-  void normalize() {
-    float norm = (float)sqrt(x * x + y * y);
-
-    if (norm == 0.0) {
-      printf("\n\nNormalize::Divisao por zero");
-      x = 1;
-      y = 1;
-      return;
-    }
-    x /= norm;
-    y /= norm;
-  }
-
-  Vector2 operator-(const Vector2 &v) {
-    Vector2 aux(x - v.x, y - v.y);
-    return (aux);
-  }
-
-  Vector2 operator+(const Vector2 &v) {
-    Vector2 aux(x + v.x, y + v.y);
-    return (aux);
-  }
-
-  // Adicionem os demais overloads de operadores aqui.
+  // Métodos estáticos
+  static float dot(const Vector2 &a, const Vector2 &b);
+  static float distance(const Vector2 &a, const Vector2 &b);
 };
 
-#endif
+#endif // VECTOR_2_H

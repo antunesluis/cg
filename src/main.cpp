@@ -1,42 +1,18 @@
-/*********************************************************************
-// Canvas para desenho, criada sobre a API OpenGL. Nao eh necessario
-conhecimentos de OpenGL para usar.
-//  Autor: Cesar Tadeu Pozzer
-//         02/2025
-//
-//  Pode ser utilizada para fazer desenhos, animacoes, e jogos simples.
-//  Tem tratamento de mouse e teclado
-//  Estude o OpenGL antes de tentar compreender o arquivo gl_canvas.cpp
-//
-//  Versao 2.1
-//
-//  Instruções:
-//	  Para alterar a animacao, digite numeros entre 1 e 3
-// *********************************************************************/
-
 #include <GL/glut.h>
 
 #include <math.h>
 #include <stdlib.h>
 
-#include "Bmp.h"
 #include "ImageEditor.h"
 #include "gl_canvas2d.h"
 
 // Editor
 ImageEditor *editor;
 
-int screenWidth = 500, screenHeight = 500;
+int screenWidth = 1000, screenHeight = 1000, editorPanelWidth = 200;
 int mouseX, mouseY;
 
-// BMP
-Bmp *img1;
-unsigned char *data;
-
-void render() {
-  editor->render();
-  img1->render(img1, data);
-}
+void render() { editor->render(); }
 
 void keyboard(int key) { editor->handleKeyboard(key); }
 
@@ -53,13 +29,13 @@ int main(void) {
   CV::init(&screenWidth, &screenHeight,
            "Photoshop Caseiro - Computacao Grafica");
 
-  editor = new ImageEditor(screenWidth, screenHeight);
+  editor = new ImageEditor(screenWidth, screenHeight, editorPanelWidth);
 
-  img1 = new Bmp("./src/images/img1.bmp");
-  data = img1->getImage();
-  img1->convertBGRtoRGB();
+  // Carrega a imagem apenas através do editor
+  editor->loadImageToLayer(0, "./src/images/img1.bmp");
 
   CV::run();
-  return 0;
+
   delete editor;
+  return 0;
 }
