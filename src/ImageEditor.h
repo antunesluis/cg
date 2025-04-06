@@ -2,17 +2,23 @@
 #define IMAGEEDITOR_H
 
 // #include "UIManager.h"
+#include "Checkbox.h"
 #include "Layer.h"
+#include "UIManager.h"
 #include <vector>
 
 class ImageEditor {
 private:
+  UIManager *uiManager;
   std::vector<Layer *> layers;
+  std::vector<Checkbox *> layerVisibilityCheckboxes;
+
   int activeLayerIndex;
   bool drawing;
   int brushSize;
   unsigned char currentColor[3];
   int canvasWidth, canvasHeight, editorPanelWidth;
+  int scrollOffset = 0;
 
 public:
   ImageEditor(int width, int height, int panelWidth);

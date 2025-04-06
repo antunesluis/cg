@@ -1,28 +1,53 @@
 #!/bin/bash
 
-# Nome do executável final
-EXECUTABLE="./texture"
-# Diretórios
+# Configurações
+EXECUTABLE="./editor"
 SRC_DIR="./src"
 INCLUDE_DIR="./include"
+OBJ_DIR="./obj" # Novo diretório para objetos
+LIBS="-lGL -lGLU -lglut -lm"
 
-# Limpa compilações anteriores
-rm -f *.o $EXECUTABLE
+# Cria diretório de objetos se não existir
+mkdir -p "$OBJ_DIR"
 
-# Compila todos os arquivos .cpp
-g++ -c -I"$INCLUDE_DIR" "$SRC_DIR/main.cpp" -o main.o
-g++ -c -I"$INCLUDE_DIR" "$SRC_DIR/gl_canvas2d.cpp" -o gl_canvas2d.o
-g++ -c -I"$INCLUDE_DIR" "$SRC_DIR/bmp.cpp" -o bmp.o
-# g++ -c -I"$INCLUDE_DIR" "$SRC_DIR/Layer.cpp" -o Layer.o
-g++ -c -I"$INCLUDE_DIR" "$SRC_DIR/ImageEditor.cpp" -o ImageEditor.o
+# Limpeza
+echo "Limpando compilações anteriores..."
+rm -f "$OBJ_DIR"/*.o "$EXECUTABLE"
 
-# Linka tudo incluindo a biblioteca matemática
-g++ -o "$EXECUTABLE" main.o gl_canvas2d.o bmp.o ImageEditor.o \
-    -lGL -lGLU -lglut -lm
+# Lista de arquivos para compilar
+SOURCES=(
+    "main.cpp"
+    "Vector2.cpp"
+    "gl_canvas2d.cpp"
+    "bmp.cpp"
+    "Layer.cpp"
+    "ImageEditor.cpp"
+    "Button.cpp"
+    "UIManager.cpp"
+    "Checkbox.cpp"
+)
 
-# Executa o programa se a compilação foi bem sucedida
+# Compilação
+echo "Compilando..."
+for source in "${SOURCES[@]}"; do
+    base_name=$(basename "$source")
+    obj_name="${base_name%.*}.o"
+    echo "- Compilando $source"
+    g++ -c -I"$INCLUDE_DIR" "$SRC_DIR/$source" -o "$OBJ_DIR/$obj_name" || exit 1
+done
+
+# Linking
+echo "Linkando..."
+g++ -o "$EXECUTABLE" "$OBJ_DIR"/*.o $LIBS || {
+    echo "Erro no linking"
+    exit 1
+}
+
+# Execução
 if [ -f "$EXECUTABLE" ]; then
+    echo "Executando..."
     "$EXECUTABLE"
 else
-    echo "Falha na compilação"
+    echo "Falha na compilação!"
+    exit 1
 fi

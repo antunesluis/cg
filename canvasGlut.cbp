@@ -3,30 +3,40 @@
 	<FileVersion major="1" minor="6" />
 	<Project>
 		<Option title="Canvas 2D" />
-		<Option pch_mode="2" />
+		<Option pch_mode="0" /> <!-- Desativado por segurança -->
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="../__bin/Debug/canvas2d" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../" />
-				<Option object_output="../__obj/Debug/" />
-				<Option type="1" />
+				<Option output="bin/Debug/canvas2d" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="." />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" /> <!-- Console application -->
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-Wall" />
+					<Add option="-mwindows" /> <!-- Modo GUI -->
 				</Compiler>
+				<Linker>
+					<Add option="-static-libgcc" />
+					<Add option="-static-libstdc++" />
+				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="../__bin/Release/canvas2d" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../" />
-				<Option object_output="../__obj/Release/" />
+				<Option output="bin/Release/canvas2d" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="." />
+				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2 -Wall" />
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-mwindows" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-static-libgcc" />
+					<Add option="-static-libstdc++" />
 				</Linker>
 			</Target>
 		</Build>
@@ -34,21 +44,30 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add option="-std=c++11" />
-			<Add directory="../include" />
+			<Add directory="include" />
+			<Add directory="src" />
 		</Compiler>
 		<Linker>
-			<Add library="../lib/libfreeglut32.a" />
-			<Add library="../lib/libopengl32.a"/>
-			<Add library="../lib/libglu32.a"/>
+			<Add library="lib/libfreeglut32.a" />
+			<Add library="lib/libopengl32.a"/>
+			<Add library="lib/libglu32.a"/>
+			<Add directory="lib" />
 		</Linker>
-		<Unit filename="src/Bola.h" />
-		<Unit filename="src/Botao.h" />
-		<Unit filename="src/Relogio.cpp" />
-		<Unit filename="src/Relogio.h" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/Vector2.cpp" />
 		<Unit filename="src/Vector2.h" />
 		<Unit filename="src/gl_canvas2d.cpp" />
 		<Unit filename="src/gl_canvas2d.h" />
-		<Unit filename="src/main.cpp" />
-
+		<Unit filename="src/bmp.cpp" />
+		<Unit filename="src/Bmp.h" />
+		<Unit filename="src/Layer.cpp" />
+		<Unit filename="src/Layer.h" />
+		<Unit filename="src/ImageEditor.cpp" />
+		<Unit filename="src/ImageEditor.h" />
+		<Unit filename="src/UIElement.h" />
+		<Unit filename="src/Button.cpp" />
+		<Unit filename="src/Button.h" />
+		<Unit filename="src/UIManager.cpp" />
+		<Unit filename="src/UIManager.h" />
 	</Project>
 </CodeBlocks_project_file>

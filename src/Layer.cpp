@@ -59,7 +59,6 @@ void Layer::render() {
 
 void Layer::renderImage() {
   if (image == nullptr || image->getImage() == nullptr) {
-    printf("\nErro: Imagem inválida na camada");
     return;
   }
 
