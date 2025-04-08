@@ -28,6 +28,7 @@ public:
 
   void render();
   void renderImage(float xOffset, float yOffset);
+  void drawPixel(int x, int y, int radius = 1);
   void renderDrawnPixels();
   void loadImage(const char *fileName);
 
@@ -46,9 +47,6 @@ public:
   void flipVertical();
   void adjustBrightness(float factor);
   void clear();
-
-private:
-  void drawPixel(int x, int y, int radius = 1);
 };
 
 #endif
