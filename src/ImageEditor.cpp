@@ -1,136 +1,200 @@
 #include "ImageEditor.h"
-#include "Constants.h"
-#include "gl_canvas2d.h"
-#include <algorithm>
-#include <string>
 
 ImageEditor::ImageEditor(int width, int height, int panelWidth) {
-  uiManager = new UIManager(panelWidth);
-
   canvasWidth = width;
   canvasHeight = height;
   editorPanelWidth = panelWidth;
-
-  activeLayerIndex = 0;
   drawing = false;
-  brushSize = 3;
+  brushSize = config::brush::default_size;
 
   // Cor inicial do pincel (vermelho)
   currentColor[0] = 255;
   currentColor[1] = 0;
   currentColor[2] = 0;
 
-  addLayer(); // Adiciona a primeira camada
+  uiManager = new UIManager(panelWidth);
+  layerManager = new LayerManager(width, height);
   initUI();
 }
 
 ImageEditor::~ImageEditor() {
-  for (auto layer : layers) {
-    delete layer;
-  }
+  delete layerManager;
   delete uiManager;
 }
 
 void ImageEditor::initUI() {
-  float buttonWidth = editorPanelWidth - 20;
-  float buttonHeight = 30;
-  float startY = 20;
-  float margin = 10;
+  float buttonWidth = editorPanelWidth - 2 * config::layout::side_margin;
+  float buttonHeight = config::layout::button_height;
+  float startY = config::layout::button_start_y;
+  float margin = config::layout::button_margin;
 
-  // Botão para adicionar layer
-  uiManager->addButton(10, startY, buttonWidth, buttonHeight, "Adicionar Layer",
-                       [this]() { this->addLayer(); });
+  uiManager->addButton(config::layout::side_margin, startY, buttonWidth,
+                       buttonHeight, "Adicionar Layer",
+                       [this]() { this->layerManager->addNewLayer(); });
 
-  // Botão para remover layer
-  uiManager->addButton(10, startY + buttonHeight + margin, buttonWidth,
+  uiManager->addButton(config::layout::side_margin,
+                       startY + buttonHeight + margin, buttonWidth,
                        buttonHeight, "Remover Layer", [this]() {
-                         if (!layers.empty()) {
-                           this->removeLayer(activeLayerIndex);
+                         if (layerManager->layerCount() > 1) {
+                           this->layerManager->removeLayer(
+                               this->layerManager->getActiveLayerIndex());
                          }
+                       });
+
+  uiManager->addButton(config::layout::side_margin,
+                       startY + 2 * (buttonHeight + margin), buttonWidth,
+                       buttonHeight, "Carregar Imagem", [this]() {
+                         this->imageLoaderUI.setVisible(
+                             true, this->layerManager->getActiveLayer());
                        });
 }
 
-void ImageEditor::render() {
-  CV::clear(0.8f, 0.8f, 0.8f); // Fundo cinza claro
+void ImageEditor::handleMouse(int button, int state, int wheel, int direction,
+                              int x, int y) {
+  if (placingImage) {
+    previewX = x;
+    previewY = y;
+  }
 
-  renderCheckerBackground();
-  renderLayers();
-  renderUI();
-}
+  // Verifica seleção no imageLoaderUI
+  if (imageLoaderUI.handleMouse(button, state, x, y)) {
+    placingImage = true;
+    return;
+  }
 
-void ImageEditor::renderUI() {
-  // Painel lateral
-  CV::color(Constants::PANEL_BG_COLOR[0], Constants::PANEL_BG_COLOR[1],
-            Constants::PANEL_BG_COLOR[2]);
-  CV::rectFill(canvasWidth - editorPanelWidth, 0, canvasWidth, canvasHeight);
-
-  // Renderiza elementos UI
-  CV::translate(canvasWidth - editorPanelWidth, 0);
-  uiManager->render();
-
-  // Lista de layers
-  float listStartY = 150; // Posição mais alta para a lista
-  float itemHeight = 30;
-
-  CV::color(Constants::TEXT_COLOR[0], Constants::TEXT_COLOR[1],
-            Constants::TEXT_COLOR[2]);
-  CV::text(10, listStartY - 20, "Camadas:");
-
-  for (int i = 0; i < layers.size(); i++) {
-    float y = listStartY + i * itemHeight;
-
-    // Destaque para layer ativa (mais visível)
-    if (i == activeLayerIndex) {
-      CV::color(Constants::ACTIVE_LAYER_COLOR[0],
-                Constants::ACTIVE_LAYER_COLOR[1],
-                Constants::ACTIVE_LAYER_COLOR[2]);
-      CV::rectFill(5, y - 5, editorPanelWidth - 5, y + itemHeight - 5);
+  // Posiciona a imagem ao clicar
+  if (placingImage && button == 0 && state == 0) {
+    Layer *activeLayer = layerManager->getActiveLayer();
+    if (activeLayer && activeLayer->hasImage()) {
+      // Centraliza a imagem no clique
+      Bmp *img = activeLayer->getImage();
+      activeLayer->setPosition(x - img->getWidth() / 2,
+                               y - img->getHeight() / 2);
     }
+    placingImage = false;
+    return;
+  }
 
-    // Nome da layer
-    CV::color(Constants::TEXT_COLOR[0], Constants::TEXT_COLOR[1],
-              Constants::TEXT_COLOR[2]);
-    CV::text(10, y + 5, ("Layer " + std::to_string(i + 1)).c_str());
+  if (x > canvasWidth - editorPanelWidth) {
+    x -= (canvasWidth - editorPanelWidth);
 
-    // Checkbox de visibilidade
-    float checkboxSize = 15;
-    float checkboxX = editorPanelWidth - 30;
-    float checkboxY = y;
+    handleLayerListClick(x, y, button, state);
+    uiManager->handleMouse(x, y, state);
+    return;
+  }
 
-    // Caixa do checkbox
-    CV::color(Constants::CHECKBOX_COLOR[0], Constants::CHECKBOX_COLOR[1],
-              Constants::CHECKBOX_COLOR[2]);
-    CV::rectFill(checkboxX, checkboxY, checkboxX + checkboxSize,
-                 checkboxY + checkboxSize);
-    CV::color(0.7f, 0.7f, 0.7f);
-    CV::rect(checkboxX, checkboxY, checkboxX + checkboxSize,
-             checkboxY + checkboxSize);
-
-    // Checkmark
-    if (layers[i]->isVisible()) {
-      CV::color(Constants::CHECKMARK_COLOR[0], Constants::CHECKMARK_COLOR[1],
-                Constants::CHECKMARK_COLOR[2]);
-      CV::line(checkboxX + 3, checkboxY + checkboxSize / 2,
-               checkboxX + checkboxSize / 2, checkboxY + checkboxSize - 3);
-      CV::line(checkboxX + checkboxSize / 2, checkboxY + checkboxSize - 3,
-               checkboxX + checkboxSize - 3, checkboxY + 3);
+  if (button == 0) {
+    if (state == 0) {
+      drawing = true;
+      Layer *activeLayer = layerManager->getActiveLayer();
+      if (activeLayer) {
+        activeLayer->setDrawingColor(currentColor[0], currentColor[1],
+                                     currentColor[2]);
+        activeLayer->drawPixel(x, y, brushSize);
+      }
+    } else {
+      drawing = false;
     }
   }
 
-  // Informações do pincel
-  CV::color(Constants::TEXT_COLOR[0], Constants::TEXT_COLOR[1],
-            Constants::TEXT_COLOR[2]);
-  CV::text(10, canvasHeight - 60,
-           ("Tamanho: " + std::to_string(brushSize)).c_str());
+  if (drawing) {
+    Layer *activeLayer = layerManager->getActiveLayer();
+    if (activeLayer) {
+      activeLayer->drawPixel(x, y, brushSize);
+    }
+  }
+}
 
-  // Cor atual do pincel
-  CV::color(currentColor[0] / 255.0f, currentColor[1] / 255.0f,
-            currentColor[2] / 255.0f);
-  CV::rectFill(10, canvasHeight - 40, 30, canvasHeight - 20);
-  CV::color(0, 0, 0);
-  CV::rect(10, canvasHeight - 40, 30, canvasHeight - 20);
+void ImageEditor::handleKeyboard(unsigned char key) {
+  switch (key) {
+  case 27:
+    exit(0);
+  case '1':
+    currentColor[0] = 255;
+    currentColor[1] = 0;
+    currentColor[2] = 0;
+    break;
+  case '2':
+    currentColor[0] = 0;
+    currentColor[1] = 255;
+    currentColor[2] = 0;
+    break;
+  case '3':
+    currentColor[0] = 0;
+    currentColor[1] = 0;
+    currentColor[2] = 255;
+    break;
+  case '+':
+    brushSize = std::min(brushSize + 1, config::brush::max_size);
+    break;
+  case '-':
+    brushSize = std::max(brushSize - 1, config::brush::min_size);
+    break;
+  }
+}
 
-  CV::translate(-(canvasWidth - editorPanelWidth), 0);
+void ImageEditor::handleKeyboardUp(unsigned char key) {
+  // (vazio por enquanto)
+}
+
+void ImageEditor::handleLayerListClick(int x, int y, int button, int state) {
+  float listStartY = config::layout::layer_list_start_y;
+  float itemHeight = config::layout::layer_item_height;
+  float listEndY = listStartY + layerManager->layerCount() * itemHeight;
+
+  // Verifica se o cliqe foi dentro da área da lista de camadas
+  if (y >= listStartY && y <= listEndY && x >= 5 && x <= editorPanelWidth - 5) {
+    if (button == 0 && state == 0) {
+      int clickedLayer = static_cast<int>((y - listStartY) / itemHeight);
+
+      // Verifica se o clique foi dentro da checkbox
+      if (x >= editorPanelWidth - 30 && x <= editorPanelWidth - 10) {
+        layerManager->toggleLayerVisibility(clickedLayer);
+      } else if (x <= editorPanelWidth - 40) {
+        layerManager->setActiveLayer(clickedLayer);
+      }
+    }
+  }
+}
+
+void ImageEditor::handleImagePlacement(int x, int y) {
+  Layer *activeLayer = layerManager->getActiveLayer();
+  if (activeLayer && activeLayer->hasImage()) {
+    Bmp *img = activeLayer->getImage();
+
+    // Calcula posição centralizada
+    float drawX = previewX - img->getWidth() / 2;
+    float drawY = previewY - img->getHeight() / 2;
+
+    // Usa drawImage com offsets explícitos
+    activeLayer->renderImage(drawX, drawY);
+
+    // Desenha retângulo de seleção
+    CV::color(1, 1, 0);
+    CV::rect(drawX, drawY, drawX + img->getWidth(), drawY + img->getHeight());
+  }
+
+  // Texto de instrução
+  CV::color(1, 1, 1);
+  CV::text(10, 30, "Clique para posicionar a imagem");
+}
+
+void ImageEditor::render(int mouseX, int mouseY) {
+  CV::clear(0.8f, 0.8f, 0.8f);
+
+  renderCheckerBackground();
+  renderPanelBackground();
+
+  // Renderiza as camadas primeiro
+  layerManager->renderLayers();
+
+  // Renderiza o preview da imagem sendo posicionada
+  if (placingImage) {
+    handleImagePlacement(mouseX, mouseY);
+  }
+  imageLoaderUI.render(mouseX, mouseY);
+
+  renderUI();
 }
 
 void ImageEditor::renderCheckerBackground() {
@@ -151,126 +215,65 @@ void ImageEditor::renderCheckerBackground() {
   }
 }
 
-void ImageEditor::handleMouse(int button, int state, int wheel, int direction,
-                              int x, int y) {
-  // Verifica se está no painel
-  if (x > canvasWidth - editorPanelWidth) {
-    x -= (canvasWidth - editorPanelWidth); // Ajusta coordenada
+void ImageEditor::renderUI() {
+  CV::translate(canvasWidth - editorPanelWidth, 0);
+  uiManager->render();
+  renderLayersList();
+  renderBrushInfo();
+  CV::translate(-(canvasWidth - editorPanelWidth), 0);
+}
 
-    // Área da lista de layers
-    float listStartY = 150;
-    float itemHeight = 30;
-    float listEndY = listStartY + layers.size() * itemHeight;
+void ImageEditor::renderPanelBackground() {
+  CV::color(config::colors::panel_bg[0], config::colors::panel_bg[1],
+            config::colors::panel_bg[2]);
+  CV::rectFill(canvasWidth - editorPanelWidth, 0, canvasWidth, canvasHeight);
+}
 
-    // Verifica se clique foi na área da lista
-    if (y >= listStartY && y <= listEndY && x >= 5 &&
-        x <= editorPanelWidth - 5) {
-      if (button == 0 && state == 0) { // Clique com botão esquerdo
-        // Calcula qual layer foi clicada
-        int clickedLayer = static_cast<int>((y - listStartY) / itemHeight);
+void ImageEditor::renderLayersList() {
+  float listStartY = config::layout::layer_list_start_y;
+  float itemHeight = config::layout::layer_item_height;
+  int activeLayerIndex = layerManager->getActiveLayerIndex();
 
-        // Verifica se foi no checkbox (área direita)
-        if (x >= editorPanelWidth - 30 && x <= editorPanelWidth - 10) {
-          toggleLayerVisibility(clickedLayer);
-        }
-        // Se foi no nome da layer (área esquerda)
-        else if (x <= editorPanelWidth - 40) {
-          setActiveLayer(clickedLayer);
-        }
-      }
+  CV::color(config::colors::text[0], config::colors::text[1],
+            config::colors::text[2]);
+  CV::text(10, listStartY - 20, "Camadas:");
+
+  for (int i = 0; i < layerManager->layerCount(); i++) {
+    float y = listStartY + i * itemHeight;
+
+    // Destaque para layer ativa
+    if (i == activeLayerIndex) {
+      CV::color(config::colors::active_layer[0],
+                config::colors::active_layer[1],
+                config::colors::active_layer[2]);
+      CV::rectFill(5, y - 10, editorPanelWidth - 5, y + itemHeight - 5);
     }
 
-    uiManager->handleMouse(x, y, state);
-    return;
-  }
+    // Nome da layer
+    CV::color(config::colors::text[0], config::colors::text[1],
+              config::colors::text[2]);
+    CV::text(10, y + 10, ("Layer " + std::to_string(i + 1)).c_str());
 
-  // Manipulação do canvas
-  if (button == 0) {  // Botão esquerdo
-    if (state == 0) { // Pressionado
-      drawing = true;
-      if (activeLayerIndex >= 0 && activeLayerIndex < layers.size()) {
-        layers[activeLayerIndex]->setDrawingColor(
-            currentColor[0], currentColor[1], currentColor[2]);
-        layers[activeLayerIndex]->drawPixel(x, y, brushSize);
-      }
-    } else { // Solto
-      drawing = false;
-    }
-  }
-
-  if (drawing && activeLayerIndex >= 0 && activeLayerIndex < layers.size()) {
-    layers[activeLayerIndex]->drawPixel(x, y, brushSize);
+    // Cria e renderiza o checkbox (pode ser otimizado para criar apenas uma
+    // vez)
+    Layer *layer = layerManager->getLayer(i);
+    Checkbox cb(editorPanelWidth - 30, y, config::layout::checkbox_size, "",
+                layer->isVisible());
+    cb.render();
   }
 }
 
-void ImageEditor::handleKeyboard(unsigned char key) {
-  switch (key) {
-  case 27: // ESC
-    exit(0);
-    break;
-  case '1':
-    currentColor[0] = 255;
-    currentColor[1] = 0;
-    currentColor[2] = 0; // Vermelho
-    break;
-  case '2':
-    currentColor[0] = 0;
-    currentColor[1] = 255;
-    currentColor[2] = 0; // Verde
-    break;
-  case '3':
-    currentColor[0] = 0;
-    currentColor[1] = 0;
-    currentColor[2] = 255; // Azul
-    break;
-  case '+':
-    brushSize = std::min(brushSize + 1, 20);
-    break;
-  case '-':
-    brushSize = std::max(brushSize - 1, 1);
-    break;
-  }
-}
+void ImageEditor::renderBrushInfo() {
+  CV::color(config::colors::text[0], config::colors::text[1],
+            config::colors::text[2]);
+  CV::text(10, canvasHeight - 60,
+           ("Tamanho: " + std::to_string(brushSize)).c_str());
 
-void ImageEditor::handleKeyboardUp(unsigned char key) {
-  // Implementação para eventos de teclado liberado
-}
-
-void ImageEditor::addLayer() {
-  Layer *newLayer = new Layer(canvasWidth, canvasHeight);
-  layers.push_back(newLayer);
-  setActiveLayer(layers.size() - 1);
-}
-
-void ImageEditor::removeLayer(int index) {
-  if (index < 0 || index >= layers.size()) {
-    return;
-  }
-
-  if (layers.size() <= 1) {
-    return; // Não remove a última camada
-  }
-
-  delete layers[index];
-  layers.erase(layers.begin() + index);
-
-  // Ajusta o índice ativo
-  if (activeLayerIndex >= index) {
-    activeLayerIndex = std::max(0, activeLayerIndex - 1);
-  }
-}
-
-void ImageEditor::setActiveLayer(int index) {
-  if (index >= 0 && index < layers.size()) {
-    // Desativa a camada atual
-    if (activeLayerIndex >= 0 && activeLayerIndex < layers.size()) {
-      layers[activeLayerIndex]->setActive(false);
-    }
-
-    // Ativa a nova camada
-    layers[index]->setActive(true);
-    activeLayerIndex = index;
-  }
+  CV::color(currentColor[0] / 255.0f, currentColor[1] / 255.0f,
+            currentColor[2] / 255.0f);
+  CV::rectFill(10, canvasHeight - 40, 30, canvasHeight - 20);
+  CV::color(0, 0, 0);
+  CV::rect(10, canvasHeight - 40, 30, canvasHeight - 20);
 }
 
 bool ImageEditor::fileExists(const char *filename) {
@@ -283,40 +286,10 @@ bool ImageEditor::fileExists(const char *filename) {
 }
 
 void ImageEditor::loadImageToLayer(int layerIndex, const char *filename) {
-  if (!fileExists(filename) || layerIndex < 0 || layerIndex >= layers.size()) {
+  if (!fileExists(filename) || layerIndex < 0 ||
+      layerIndex >= layerManager->layerCount()) {
     return;
   }
-  layers[layerIndex]->loadImage(filename);
-}
-
-void ImageEditor::renderLayers() {
-  for (auto layer : layers) {
-    if (layer->isVisible()) {
-      layer->render();
-    }
-  }
-}
-
-void ImageEditor::moveLayerUp(int index) {
-  if (index > 0 && index < layers.size()) {
-    std::swap(layers[index], layers[index - 1]);
-    if (activeLayerIndex == index) {
-      activeLayerIndex--;
-    }
-  }
-}
-
-void ImageEditor::moveLayerDown(int index) {
-  if (index >= 0 && index < layers.size() - 1) {
-    std::swap(layers[index], layers[index + 1]);
-    if (activeLayerIndex == index) {
-      activeLayerIndex++;
-    }
-  }
-}
-
-void ImageEditor::toggleLayerVisibility(int index) {
-  if (index >= 0 && index < layers.size()) {
-    layers[index]->setVisible(!layers[index]->isVisible());
-  }
+  Layer *layer = layerManager->getLayer(layerIndex);
+  layer->loadImage(filename);
 }

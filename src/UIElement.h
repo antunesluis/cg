@@ -27,6 +27,7 @@ public:
   void setOnClick(std::function<void()> callback) {
     onClickCallback = callback;
   }
+
   bool isHovered() const { return hovered; }
   bool isPressed() const { return pressed; }
 };

@@ -4,14 +4,13 @@
 Button::Button(float x, float y, float w, float h, const std::string &label)
     : UIElement(x, y, w, h, label) {}
 
-// Button.cpp
-// Button.cpp
 void Button::render() const {
   // Fundo com gradiente sutil
   if (pressed) {
     CV::color(0.2f, 0.5f, 0.8f);
   } else if (hovered) {
-    CV::color(0.3f, 0.3f, 0.4f);
+    CV::color(config::colors::button_hover[0], config::colors::button_hover[1],
+              config::colors::button_hover[2]);
   } else {
     CV::color(0.25f, 0.25f, 0.3f);
   }

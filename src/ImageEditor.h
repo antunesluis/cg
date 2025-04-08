@@ -1,19 +1,28 @@
 #ifndef IMAGEEDITOR_H
 #define IMAGEEDITOR_H
 
-// #include "UIManager.h"
 #include "Checkbox.h"
+#include "Config.h"
+#include "ImageLoaderUI.h"
 #include "Layer.h"
+#include "LayerManager.h"
 #include "UIManager.h"
+#include "gl_canvas2d.h"
+#include <algorithm>
+#include <string>
 #include <vector>
 
 class ImageEditor {
 private:
   UIManager *uiManager;
-  std::vector<Layer *> layers;
-  std::vector<Checkbox *> layerVisibilityCheckboxes;
+  LayerManager *layerManager;
 
-  int activeLayerIndex;
+  ImageLoaderUI imageLoaderUI;
+  bool placingImage = false;
+  float placementX, placementY;
+  std::string currentImagePath;
+  float previewX, previewY;
+
   bool drawing;
   int brushSize;
   unsigned char currentColor[3];
@@ -25,30 +34,27 @@ public:
   ~ImageEditor();
 
   // Canva handling methods
-  void render();
+  void render(int mouseX, int mouseY);
   void handleMouse(int button, int state, int wheel, int direction, int x,
                    int y);
   void handleKeyboard(unsigned char key);
   void handleKeyboardUp(unsigned char key);
 
-  // Layer management
-  void addLayer();
-  void removeLayer(int index);
-  void setActiveLayer(int index);
-  void moveLayerUp(int index);
-  void moveLayerDown(int index);
-  void toggleLayerVisibility(int index);
-
   // Image operations
   void loadImageToLayer(int layerIndex, const char *filename);
-  void applyEffectToActiveLayer(int effectType, float param = 0.0f);
+  void handleImagePlacement(int x, int y);
 
 private:
   void renderCheckerBackground();
+  void renderPanelBackground();
+  void renderLayersList();
   void renderLayers();
+  void renderBrushInfo();
   void renderUI();
+
   void initUI();
   bool fileExists(const char *filename);
+  void handleLayerListClick(int x, int y, int button, int state);
 };
 
 #endif

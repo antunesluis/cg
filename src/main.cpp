@@ -1,9 +1,11 @@
+
 #include <GL/glut.h>
 
+#include <dirent.h>
 #include <math.h>
 #include <stdlib.h>
 
-#include "Constants.h"
+#include "Config.h"
 #include "ImageEditor.h"
 #include "gl_canvas2d.h"
 
@@ -11,7 +13,7 @@
 ImageEditor *editor;
 int mouseX, mouseY;
 
-void render() { editor->render(); }
+void render() { editor->render(mouseX, mouseY); }
 
 void keyboard(int key) { editor->handleKeyboard(key); }
 
@@ -25,9 +27,9 @@ void mouse(int button, int state, int wheel, int direction, int x, int y) {
 }
 
 int main(void) {
-  int screenHeight = Constants::SCREEN_HEIGHT;
-  int screenWidth = Constants::SCREEN_WIDTH;
-  int editorPanelWidth = Constants::EDITOR_PANEL_WIDTH;
+  int screenHeight = config::screen::height;
+  int screenWidth = config::screen::width;
+  int editorPanelWidth = config::editor::panel_width;
 
   CV::init(&screenWidth, &screenHeight,
            "Photoshop Caseiro - Computacao Grafica");
@@ -35,9 +37,24 @@ int main(void) {
   editor = new ImageEditor(screenWidth, screenHeight, editorPanelWidth);
   printf("UI Manager criado. Painel width: %d\n", editorPanelWidth);
 
-  // Carrega a imagem apenas através do editor
+  // Carrega a imagem apenas atravÃ©s do editor
   editor->loadImageToLayer(0, "./src/images/img1.bmp");
   // editor->loadImageToLayer(0, ".\\src\\images\\img1.bmp");
+
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir("./src/images/")) != NULL) {
+    printf("\nArquivos encontrados na pasta images:\n");
+    while ((ent = readdir(dir)) != NULL) {
+      std::string name = ent->d_name;
+      if (name.size() > 4 && name.substr(name.size() - 4) == ".bmp") {
+        printf("- %s\n", name.c_str());
+      }
+    }
+    closedir(dir);
+  } else {
+    printf("\nERRO: Nao foi possivel abrir a pasta ./src/images/\n");
+  }
 
   CV::run();
 

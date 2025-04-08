@@ -34,8 +34,6 @@ void UIManager::render() {
 
 void UIManager::handleMouse(int x, int y, int buttonState) {
   for (auto element : elements) {
-    if (element->checkInteraction(x, y, buttonState)) {
-      printf("Elemento clicado");
-    }
+    element->checkInteraction(x, y, buttonState);
   }
 }

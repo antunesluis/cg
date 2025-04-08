@@ -64,9 +64,12 @@
 		<Unit filename="src/Layer.h" />
 		<Unit filename="src/ImageEditor.cpp" />
 		<Unit filename="src/ImageEditor.h" />
+		<Unit filename="src/Constants.h" />
 		<Unit filename="src/UIElement.h" />
 		<Unit filename="src/Button.cpp" />
 		<Unit filename="src/Button.h" />
+		<Unit filename="src/Checkbox.cpp" />
+		<Unit filename="src/Checkbox.h" />
 		<Unit filename="src/UIManager.cpp" />
 		<Unit filename="src/UIManager.h" />
 	</Project>

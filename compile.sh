@@ -19,12 +19,14 @@ SOURCES=(
     "main.cpp"
     "Vector2.cpp"
     "gl_canvas2d.cpp"
-    "bmp.cpp"
+    "Bmp.cpp"
     "Layer.cpp"
+    "LayerManager.cpp"
     "ImageEditor.cpp"
     "Button.cpp"
     "UIManager.cpp"
     "Checkbox.cpp"
+    "ImageLoaderUI.cpp"
 )
 
 # Compilação

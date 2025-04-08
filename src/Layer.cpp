@@ -1,5 +1,4 @@
 #include "Layer.h"
-#include "gl_canvas2d.h"
 
 Layer::Layer(int w, int h) {
   image = nullptr;
@@ -53,14 +52,13 @@ void Layer::render() {
   if (!visible)
     return;
 
-  renderImage();
+  renderImage(imageX, imageY);
   renderDrawnPixels();
 }
 
-void Layer::renderImage() {
-  if (image == nullptr || image->getImage() == nullptr) {
+void Layer::renderImage(float xOffset, float yOffset) {
+  if (!image || !image->getImage())
     return;
-  }
 
   unsigned char *imgData = image->getImage();
   const int imgWidth = image->getWidth();
@@ -70,13 +68,12 @@ void Layer::renderImage() {
   for (int y = 0; y < imgHeight; y++) {
     for (int x = 0; x < imgWidth; x++) {
       int pos = y * bytesPerLine + x * 3;
-
       float r = imgData[pos] / 255.0f;
       float g = imgData[pos + 1] / 255.0f;
       float b = imgData[pos + 2] / 255.0f;
 
       CV::color(r, g, b);
-      CV::point(x, y);
+      CV::point(x + xOffset, y + yOffset);
     }
   }
 }
@@ -111,6 +108,18 @@ void Layer::adjustBrightness(float factor) {
   if (image != nullptr) {
     // Implementar ajuste de brilho
   }
+}
+
+void Layer::setPosition(float x, float y) {
+  imageX = x;
+  imageY = y;
+}
+
+bool Layer::hasImage() const { return image != nullptr; }
+
+void Layer::getPosition(float &outX, float &outY) const {
+  outX = imageX;
+  outY = imageY;
 }
 
 void Layer::clear() {
