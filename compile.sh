@@ -26,6 +26,7 @@ SOURCES=(
     "Button.cpp"
     "UIManager.cpp"
     "Checkbox.cpp"
+    "Slider.cpp"
     "ImageLoaderUI.cpp"
 )
 

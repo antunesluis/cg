@@ -12,10 +12,13 @@
 #include <string>
 #include <vector>
 
+enum class ToolType { BRUSH, ERASER, FILL };
+
 class ImageEditor {
 private:
   UIManager *uiManager;
   LayerManager *layerManager;
+  ToolType currentTool = ToolType::BRUSH;
 
   ImageLoaderUI imageLoaderUI;
   bool placingImage = false;
@@ -28,6 +31,10 @@ private:
   unsigned char currentColor[3];
   int canvasWidth, canvasHeight, editorPanelWidth;
   int scrollOffset = 0;
+
+  float currentBrightness = 1.0f;
+  float currentContrast = 1.0f;
+  float currentSaturation = 1.0f;
 
 public:
   ImageEditor(int width, int height, int panelWidth);
@@ -55,6 +62,7 @@ private:
   void initUI();
   bool fileExists(const char *filename);
   void handleLayerListClick(int x, int y, int button, int state);
+  void updateImageEffects();
 };
 
 #endif

@@ -1,4 +1,5 @@
 #include "ImageEditor.h"
+#include "Config.h"
 
 ImageEditor::ImageEditor(int width, int height, int panelWidth) {
   canvasWidth = width;
@@ -25,28 +26,161 @@ ImageEditor::~ImageEditor() {
 void ImageEditor::initUI() {
   float buttonWidth = editorPanelWidth - 2 * config::layout::side_margin;
   float buttonHeight = config::layout::button_height;
-  float startY = config::layout::button_start_y;
   float margin = config::layout::button_margin;
+  float currentY = config::layout::button_start_y;
 
-  uiManager->addButton(config::layout::side_margin, startY, buttonWidth,
-                       buttonHeight, "Adicionar Layer",
+  // ===== SEÇÃO DE GERENCIAMENTO DE CAMADAS =====
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Adicionar Camada",
                        [this]() { this->layerManager->addNewLayer(); });
+  currentY += buttonHeight + margin;
 
-  uiManager->addButton(config::layout::side_margin,
-                       startY + buttonHeight + margin, buttonWidth,
-                       buttonHeight, "Remover Layer", [this]() {
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Remover Camada", [this]() {
                          if (layerManager->layerCount() > 1) {
                            this->layerManager->removeLayer(
                                this->layerManager->getActiveLayerIndex());
                          }
                        });
+  currentY += buttonHeight + margin;
 
-  uiManager->addButton(config::layout::side_margin,
-                       startY + 2 * (buttonHeight + margin), buttonWidth,
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Mover p/ Cima", [this]() {
+                         this->layerManager->moveLayerUp(
+                             this->layerManager->getActiveLayerIndex());
+                       });
+  currentY += buttonHeight + margin;
+
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Mover p/ Baixo", [this]() {
+                         this->layerManager->moveLayerDown(
+                             this->layerManager->getActiveLayerIndex());
+                       });
+  currentY += buttonHeight + margin;
+
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
                        buttonHeight, "Carregar Imagem", [this]() {
                          this->imageLoaderUI.setVisible(
                              true, this->layerManager->getActiveLayer());
                        });
+  currentY += buttonHeight + margin;
+
+  // ===== LISTA DE LAYERS =====
+  // (Renderizada automaticamente na posição layer_list_start_y)
+
+  // ===== SEÇÃO DE FERRAMENTAS =====
+  currentY = config::layout::effects_start_y;
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Pincel",
+                       [this]() { this->currentTool = ToolType::BRUSH; });
+  currentY += buttonHeight + margin;
+
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Borracha", [this]() {
+                         this->currentTool = ToolType::ERASER;
+                         this->currentColor[0] = 255;
+                         this->currentColor[1] = 255;
+                         this->currentColor[2] = 255;
+                       });
+  currentY += buttonHeight + margin;
+
+  // ===== SEÇÃO DE EFEITOS =====
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Flip Horizontal", [this]() {
+                         Layer *layer = layerManager->getActiveLayer();
+                         if (layer)
+                           layer->flipHorizontal();
+                       });
+  currentY += buttonHeight + margin;
+
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Flip Vertical", [this]() {
+                         Layer *layer = layerManager->getActiveLayer();
+                         if (layer)
+                           layer->flipVertical();
+                       });
+  currentY += buttonHeight + margin;
+
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Tons de Cinza", [this]() {
+                         Layer *layer = layerManager->getActiveLayer();
+                         if (layer)
+                           layer->convertToGrayscale();
+                       });
+  currentY += buttonHeight + margin;
+
+  uiManager->addButton(
+      config::layout::side_margin, currentY, buttonWidth, buttonHeight,
+      "Tons de Cinza", [this]() {
+        Layer *layer = layerManager->getActiveLayer();
+        if (layer)
+          this->layerManager->getActiveLayer()->applyGaussianBlur(1.5f);
+      });
+
+  currentY += buttonHeight + margin;
+
+  // ===== SLIDERS DE AJUSTE =====
+  uiManager->addSlider(config::layout::side_margin, currentY, buttonWidth, 30,
+                       0.5f, 1.5f, 1.0f, "Brilho", [this](float value) {
+                         Layer *layer = layerManager->getActiveLayer();
+                         if (layer) {
+                           this->currentBrightness = value;
+                           this->updateImageEffects();
+                         }
+                       });
+  currentY += 40;
+
+  uiManager->addSlider(config::layout::side_margin, currentY, buttonWidth, 30,
+                       0.0f, 2.0f, 1.0f, "Contraste", [this](float value) {
+                         Layer *layer = layerManager->getActiveLayer();
+                         if (layer) {
+                           this->currentContrast = value;
+                           this->updateImageEffects();
+                         }
+                       });
+  currentY += 40;
+
+  uiManager->addSlider(config::layout::side_margin, currentY, buttonWidth, 30,
+                       0.0f, 2.0f, 1.0f, "Saturacao", [this](float value) {
+                         Layer *layer = layerManager->getActiveLayer();
+                         if (layer) {
+                           this->currentSaturation = value;
+                           this->updateImageEffects();
+                         }
+                       });
+  currentY += 40;
+
+  uiManager->addSlider(
+      config::layout::side_margin, currentY, buttonWidth, 30,
+      config::brush::min_size, config::brush::max_size,
+      config::brush::default_size, "Brush Size",
+      [this](float value) { this->brushSize = static_cast<int>(value); });
+  currentY += 40;
+
+  uiManager->addSlider(config::layout::side_margin, currentY, buttonWidth, 30,
+                       1, 3, 1, "Brush Size", [this](float value) {
+                         layerManager->getActiveLayer()->applyGaussianBlur(
+                             static_cast<int>(value));
+                       });
+  currentY += 60;
+
+  // ===== UTILITÁRIOS =====
+  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
+                       buttonHeight, "Limpar Camada", [this]() {
+                         Layer *layer = layerManager->getActiveLayer();
+                         if (layer) {
+                           layer->clear();
+                           layer->resetEffects();
+                         }
+                       });
+}
+
+void ImageEditor::updateImageEffects() {
+  Layer *activeLayer = layerManager->getActiveLayer();
+  if (activeLayer && activeLayer->hasImage()) {
+    activeLayer->applyEffects(currentBrightness, currentContrast,
+                              currentSaturation);
+  }
 }
 
 void ImageEditor::handleMouse(int button, int state, int wheel, int direction,
@@ -66,10 +200,9 @@ void ImageEditor::handleMouse(int button, int state, int wheel, int direction,
   if (placingImage && button == 0 && state == 0) {
     Layer *activeLayer = layerManager->getActiveLayer();
     if (activeLayer && activeLayer->hasImage()) {
-      // Centraliza a imagem no clique
-      Bmp *img = activeLayer->getImage();
-      activeLayer->setPosition(x - img->getWidth() / 2,
-                               y - img->getHeight() / 2);
+      // Centraliza a imagem no clique usando as dimensões da layer
+      activeLayer->setPosition(x - activeLayer->getImageWidth() / 2,
+                               y - activeLayer->getImageHeight() / 2);
     }
     placingImage = false;
     return;
@@ -77,7 +210,6 @@ void ImageEditor::handleMouse(int button, int state, int wheel, int direction,
 
   if (x > canvasWidth - editorPanelWidth) {
     x -= (canvasWidth - editorPanelWidth);
-
     handleLayerListClick(x, y, button, state);
     uiManager->handleMouse(x, y, state);
     return;
@@ -160,18 +292,17 @@ void ImageEditor::handleLayerListClick(int x, int y, int button, int state) {
 void ImageEditor::handleImagePlacement(int x, int y) {
   Layer *activeLayer = layerManager->getActiveLayer();
   if (activeLayer && activeLayer->hasImage()) {
-    Bmp *img = activeLayer->getImage();
-
     // Calcula posição centralizada
-    float drawX = previewX - img->getWidth() / 2;
-    float drawY = previewY - img->getHeight() / 2;
+    float drawX = previewX - activeLayer->getImageWidth() / 2;
+    float drawY = previewY - activeLayer->getImageHeight() / 2;
 
-    // Usa drawImage com offsets explícitos
+    // Renderiza a imagem
     activeLayer->renderImage(drawX, drawY);
 
     // Desenha retângulo de seleção
     CV::color(1, 1, 0);
-    CV::rect(drawX, drawY, drawX + img->getWidth(), drawY + img->getHeight());
+    CV::rect(drawX, drawY, drawX + activeLayer->getImageWidth(),
+             drawY + activeLayer->getImageHeight());
   }
 
   // Texto de instrução
@@ -217,7 +348,19 @@ void ImageEditor::renderCheckerBackground() {
 
 void ImageEditor::renderUI() {
   CV::translate(canvasWidth - editorPanelWidth, 0);
+
+  // Renderiza os elementos UI
   uiManager->render();
+
+  // Linha separadora acima da lista de layers
+  CV::color(0.4f, 0.4f, 0.5f);
+  CV::line(10, config::layout::layer_list_start_y - 35, editorPanelWidth - 10,
+           config::layout::layer_list_start_y - 35);
+
+  // Linha separadora acima das ferramentas
+  CV::line(10, config::layout::effects_start_y - 15, editorPanelWidth - 10,
+           config::layout::effects_start_y - 15);
+
   renderLayersList();
   renderBrushInfo();
   CV::translate(-(canvasWidth - editorPanelWidth), 0);
@@ -234,9 +377,15 @@ void ImageEditor::renderLayersList() {
   float itemHeight = config::layout::layer_item_height;
   int activeLayerIndex = layerManager->getActiveLayerIndex();
 
+  // Adiciona um fundo e título para a seção
+  CV::color(config::colors::panel_bg[0], config::colors::panel_bg[1],
+            config::colors::panel_bg[2]);
+  CV::rectFill(0, listStartY - 30, editorPanelWidth,
+               listStartY + layerManager->layerCount() * itemHeight + 10);
+
   CV::color(config::colors::text[0], config::colors::text[1],
             config::colors::text[2]);
-  CV::text(10, listStartY - 20, "Camadas:");
+  CV::text(10, listStartY - 15, "LISTA DE CAMADAS:");
 
   for (int i = 0; i < layerManager->layerCount(); i++) {
     float y = listStartY + i * itemHeight;

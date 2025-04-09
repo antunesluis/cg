@@ -17,6 +17,10 @@ public:
                  std::function<void()> onClick);
   void addCheckbox(float x, float y, float size, const std::string &label,
                    bool initial, std::function<void(bool)> onChange);
+  void addSlider(float x, float y, float w, float h, float min, float max,
+                 float initial, const std::string &label,
+                 std::function<void(float)> onChange);
+
   void render();
   void handleMouse(int x, int y, int buttonState);
 };

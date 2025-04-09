@@ -5,7 +5,7 @@
 namespace config {
 namespace screen {
 constexpr int width = 1280;
-constexpr int height = 720;
+constexpr int height = 1000;
 constexpr float aspect_ratio = width / static_cast<float>(height);
 } // namespace screen
 
@@ -30,11 +30,12 @@ constexpr std::array<float, 3> button_text_shadow = {0.0f, 0.0f, 0.0f};
 } // namespace colors
 
 namespace layout {
-constexpr float button_start_y = 20.0f;
-constexpr float button_height = 30.0f;
-constexpr float button_margin = 10.0f;
-constexpr float layer_list_start_y = 180.0f;
-constexpr float layer_item_height = 30.0f;
+constexpr float button_start_y = 20.0f; // Posição inicial dos botões
+constexpr float button_height = 30.0f;  // Altura dos botões
+constexpr float button_margin = 10.0f;  // Espaço entre botões
+constexpr float layer_list_start_y = 260.0f;
+constexpr float layer_item_height = 25.0f;
+constexpr float effects_start_y = 500.0f;
 constexpr float checkbox_size = 15.0f;
 constexpr int side_margin = 10;
 } // namespace layout
@@ -45,8 +46,4 @@ constexpr int max_size = 20;
 constexpr int min_size = 1;
 } // namespace brush
 
-namespace paths {
-constexpr auto images = "assets/images/";
-constexpr auto shaders = "assets/shaders/";
-} // namespace paths
 } // namespace config

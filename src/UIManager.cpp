@@ -1,6 +1,7 @@
 #include "UIManager.h"
 #include "Button.h"
 #include "Checkbox.h"
+#include "Slider.h"
 
 UIManager::UIManager(float panelWidth) : panelWidth(panelWidth) {}
 
@@ -24,6 +25,13 @@ void UIManager::addCheckbox(float x, float y, float size,
   Checkbox *cb = new Checkbox(x, y, size, label, initial);
   cb->setOnClick([cb, onChange]() { onChange(cb->isChecked()); });
   elements.push_back(cb);
+}
+
+void UIManager::addSlider(float x, float y, float w, float h, float min,
+                          float max, float initial, const std::string &label,
+                          std::function<void(float)> onChange) {
+  Slider *slider = new Slider(x, y, w, h, min, max, initial, label, onChange);
+  elements.push_back(slider);
 }
 
 void UIManager::render() {
