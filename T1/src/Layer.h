@@ -7,6 +7,11 @@
 #include <algorithm>
 #include <vector>
 
+template<typename T>
+const T& clamp(const T& value, const T& low, const T& high) {
+    return (value < low) ? low : (high < value) ? high : value;
+}
+
 class Layer {
 private:
   static constexpr float gaussianKernel3x3[3][3] = {

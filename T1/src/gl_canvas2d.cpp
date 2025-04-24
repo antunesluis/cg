@@ -224,7 +224,7 @@ void reshape(int w, int h) {
   // cria uma projecao ortografica com z entre (-1, 1).
 #if Y_CANVAS_CRESCE_PARA_CIMA == TRUE
   // parametros: left, right, bottom, top
-  gluOrtho2D(0.0, w, 0.0, h); // o eixo y cresce para cima.
+  gluOrtho2D(0.0, w, h, 0.0); // o eixo y cresce para cima.
 #else
   // parametros: left, right, bottom, top
   gluOrtho2D(0.0, w, h, 0.0); // o eixo y cresce para baixo

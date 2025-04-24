@@ -69,7 +69,7 @@ void Layer::applyBrightness(float brightness) {
     float pixel = currentPixels[i] / 255.0f;
     pixel = pixel + value;
     currentPixels[i] =
-        static_cast<unsigned char>(std::clamp(pixel, 0.0f, 1.0f) * 255);
+        static_cast<unsigned char>(clamp(pixel, 0.0f, 1.0f) * 255);
   }
 }
 
@@ -81,7 +81,7 @@ void Layer::applyContrast(float contrast) {
     float pixel = currentPixels[i] / 255.0f;
     pixel = (pixel - 0.5f) * factor + 0.5f;
     currentPixels[i] =
-        static_cast<unsigned char>(std::clamp(pixel, 0.0f, 1.0f) * 255);
+            static_cast<unsigned char>(clamp(pixel, 0.0f, 1.0f) * 255);
   }
 }
 
@@ -100,56 +100,12 @@ void Layer::applySaturation(float saturation) {
     b = gray + saturation * (b - gray);
 
     currentPixels[i] =
-        static_cast<unsigned char>(std::clamp(r, 0.0f, 1.0f) * 255);
+        static_cast<unsigned char>(clamp(r, 0.0f, 1.0f) * 255);
     currentPixels[i + 1] =
-        static_cast<unsigned char>(std::clamp(g, 0.0f, 1.0f) * 255);
+        static_cast<unsigned char>(clamp(g, 0.0f, 1.0f) * 255);
     currentPixels[i + 2] =
-        static_cast<unsigned char>(std::clamp(b, 0.0f, 1.0f) * 255);
+        static_cast<unsigned char>(clamp(b, 0.0f, 1.0f) * 255);
   }
-}
-
-void Layer::applyGaussianBlur(int radius) {
-  if (!currentPixels || radius < 1)
-    return;
-
-  unsigned char *temp = new unsigned char[imageWidth * imageHeight * 3];
-  memcpy(temp, currentPixels, imageWidth * imageHeight * 3);
-
-  // Usa kernel 3x3 para radius=1, 5x5 para radius=2
-  const float (*kernel)[5];
-  int kernelSize;
-
-  if (radius <= 1) {
-    kernel = (const float (*)[5])gaussianKernel3x3;
-    kernelSize = 3;
-  } else {
-    kernel = gaussianKernel5x5;
-    kernelSize = 5;
-  }
-
-  int margin = kernelSize / 2;
-
-  for (int y = margin; y < imageHeight - margin; y++) {
-    for (int x = margin; x < imageWidth - margin; x++) {
-      for (int c = 0; c < 3; c++) { // Para cada canal R,G,B
-        float sum = 0;
-
-        // Aplica o kernel
-        for (int ky = -margin; ky <= margin; ky++) {
-          for (int kx = -margin; kx <= margin; kx++) {
-            int pos = ((y + ky) * imageWidth + (x + kx)) * 3 + c;
-            float weight = kernel[ky + margin][kx + margin];
-            sum += temp[pos] * weight;
-          }
-        }
-
-        int pos = (y * imageWidth + x) * 3 + c;
-        currentPixels[pos] = static_cast<unsigned char>(sum);
-      }
-    }
-  }
-
-  delete[] temp;
 }
 
 void Layer::render() {
@@ -160,20 +116,22 @@ void Layer::render() {
 }
 
 void Layer::renderImage(float xOffset, float yOffset) {
-  if (!currentPixels)
-    return;
+    if (!currentPixels) return;
 
-  for (int y = 0; y < imageHeight; y++) {
-    for (int x = 0; x < imageWidth; x++) {
-      int pos = (y * imageWidth + x) * 3;
-      float r = currentPixels[pos] / 255.0f;
-      float g = currentPixels[pos + 1] / 255.0f;
-      float b = currentPixels[pos + 2] / 255.0f;
+    for (int y = 0; y < imageHeight; y++) {
+        // Inverte o eixo Y para Windows
+        int renderY = imageHeight - 1 - y;
 
-      CV::color(r, g, b);
-      CV::point(x + xOffset, y + yOffset);
+        for (int x = 0; x < imageWidth; x++) {
+            int pos = (renderY * imageWidth + x) * 3;
+            float r = currentPixels[pos] / 255.0f;
+            float g = currentPixels[pos+1] / 255.0f;
+            float b = currentPixels[pos+2] / 255.0f;
+
+            CV::color(r, g, b);
+            CV::point(x + xOffset, y + yOffset);
+        }
     }
-  }
 }
 
 void Layer::renderDrawnPixels() {

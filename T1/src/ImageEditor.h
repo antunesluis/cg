@@ -36,6 +36,9 @@ private:
   float currentContrast = 1.0f;
   float currentSaturation = 1.0f;
 
+  void renderColorPicker();
+  bool handleColorPickerClick(int x, int y);
+
 public:
   ImageEditor(int width, int height, int panelWidth);
   ~ImageEditor();

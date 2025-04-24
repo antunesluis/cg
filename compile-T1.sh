@@ -2,7 +2,7 @@
 
 # Configurações
 EXECUTABLE="./editor"
-SRC_DIR="./src"
+SRC_DIR="./T1/src"
 INCLUDE_DIR="./include"
 OBJ_DIR="./obj" # Novo diretório para objetos
 LIBS="-lGL -lGLU -lglut -lm"

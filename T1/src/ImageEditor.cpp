@@ -75,15 +75,6 @@ void ImageEditor::initUI() {
                        [this]() { this->currentTool = ToolType::BRUSH; });
   currentY += buttonHeight + margin;
 
-  uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
-                       buttonHeight, "Borracha", [this]() {
-                         this->currentTool = ToolType::ERASER;
-                         this->currentColor[0] = 255;
-                         this->currentColor[1] = 255;
-                         this->currentColor[2] = 255;
-                       });
-  currentY += buttonHeight + margin;
-
   // ===== SEÇÃO DE EFEITOS =====
   uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
                        buttonHeight, "Flip Horizontal", [this]() {
@@ -107,16 +98,6 @@ void ImageEditor::initUI() {
                          if (layer)
                            layer->convertToGrayscale();
                        });
-  currentY += buttonHeight + margin;
-
-  uiManager->addButton(
-      config::layout::side_margin, currentY, buttonWidth, buttonHeight,
-      "Tons de Cinza", [this]() {
-        Layer *layer = layerManager->getActiveLayer();
-        if (layer)
-          this->layerManager->getActiveLayer()->applyGaussianBlur(1.5f);
-      });
-
   currentY += buttonHeight + margin;
 
   // ===== SLIDERS DE AJUSTE =====
@@ -155,14 +136,7 @@ void ImageEditor::initUI() {
       config::brush::min_size, config::brush::max_size,
       config::brush::default_size, "Brush Size",
       [this](float value) { this->brushSize = static_cast<int>(value); });
-  currentY += 40;
-
-  uiManager->addSlider(config::layout::side_margin, currentY, buttonWidth, 30,
-                       1, 3, 1, "Brush Size", [this](float value) {
-                         layerManager->getActiveLayer()->applyGaussianBlur(
-                             static_cast<int>(value));
-                       });
-  currentY += 60;
+  currentY += 50;
 
   // ===== UTILITÁRIOS =====
   uiManager->addButton(config::layout::side_margin, currentY, buttonWidth,
@@ -185,6 +159,12 @@ void ImageEditor::updateImageEffects() {
 
 void ImageEditor::handleMouse(int button, int state, int wheel, int direction,
                               int x, int y) {
+  if (button == 0 && state == 0) { // Botão esquerdo pressionado
+    if (handleColorPickerClick(x, y)) {
+      return; // Se selecionou uma cor, não faz outras ações
+    }
+  }
+
   if (placingImage) {
     previewX = x;
     previewY = y;
@@ -325,6 +305,7 @@ void ImageEditor::render(int mouseX, int mouseY) {
   }
   imageLoaderUI.render(mouseX, mouseY);
 
+  renderColorPicker();
   renderUI();
 }
 
@@ -431,6 +412,79 @@ bool ImageEditor::fileExists(const char *filename) {
     fclose(file);
     return true;
   }
+  return false;
+}
+
+void ImageEditor::renderColorPicker() {
+  float startX = canvasWidth - editorPanelWidth + config::layout::side_margin;
+  float startY = config::layout::color_picker_start_y;
+  float boxSize = config::layout::color_box_size;
+  float margin = config::layout::color_box_margin;
+  int colorsPerRow = 8;
+
+  // Título
+  CV::color(config::colors::text[0], config::colors::text[1],
+            config::colors::text[2]);
+  CV::text(startX, startY - 20, "Seletor de Cores:");
+
+  // Renderiza os quadrados de cor
+  for (size_t i = 0; i < config::colors::colorPickerColors.size(); i++) {
+    int row = i / colorsPerRow;
+    int col = i % colorsPerRow;
+
+    float x = startX + col * (boxSize + margin);
+    float y = startY + row * (boxSize + margin);
+
+    // Cor do quadrado
+    CV::color(config::colors::colorPickerColors[i][0],
+              config::colors::colorPickerColors[i][1],
+              config::colors::colorPickerColors[i][2]);
+    CV::rectFill(x, y, x + boxSize, y + boxSize);
+
+    // Borda (mais escura quando selecionada)
+    bool isCurrentColor =
+        (currentColor[0] == config::colors::colorPickerColors[i][0] * 255 &&
+         currentColor[1] == config::colors::colorPickerColors[i][1] * 255 &&
+         currentColor[2] == config::colors::colorPickerColors[i][2] * 255);
+
+    CV::color(isCurrentColor ? 0.0f : 0.3f, isCurrentColor ? 0.0f : 0.3f,
+              isCurrentColor ? 0.0f : 0.3f);
+    CV::rect(x, y, x + boxSize, y + boxSize);
+  }
+}
+
+bool ImageEditor::handleColorPickerClick(int x, int y) {
+  float startX = canvasWidth - editorPanelWidth + config::layout::side_margin;
+  float startY = config::layout::color_picker_start_y;
+  float boxSize = config::layout::color_box_size;
+  float margin = config::layout::color_box_margin;
+  int colorsPerRow = 8;
+  int totalRows = 2;
+
+  // Verifica se o clique foi dentro da área do color picker
+  if (x < startX || x > startX + colorsPerRow * (boxSize + margin) ||
+      y < startY || y > startY + totalRows * (boxSize + margin)) {
+    return false;
+  }
+
+  // Calcula qual cor foi clicada
+  int col = static_cast<int>((x - startX) / (boxSize + margin));
+  int row = static_cast<int>((y - startY) / (boxSize + margin));
+  int index = row * colorsPerRow + col;
+
+  if (index >= 0 &&
+      index < static_cast<int>(config::colors::colorPickerColors.size())) {
+    // Atualiza a cor atual (convertendo de float [0-1] para unsigned char
+    // [0-255])
+    currentColor[0] = static_cast<unsigned char>(
+        config::colors::colorPickerColors[index][0] * 255);
+    currentColor[1] = static_cast<unsigned char>(
+        config::colors::colorPickerColors[index][1] * 255);
+    currentColor[2] = static_cast<unsigned char>(
+        config::colors::colorPickerColors[index][2] * 255);
+    return true;
+  }
+
   return false;
 }
 

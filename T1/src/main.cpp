@@ -1,3 +1,8 @@
+/************************************************************************************************
+// Luis Fernando Antunes - Editor de imagens Simplificado
+// Trabalho 1 de Computação Gáfica - Desenvolvido usando a API Gráfica Canvas2D
+// LEIA O README.md DO PROJETO PARA INFORMAÇÔES IMPORTANTES SOBRE O FUNCIONAMENTO E IMPLEMENTAÇÂO
+// **********************************************************************************************/
 
 #include <GL/glut.h>
 
@@ -36,10 +41,6 @@ int main(void) {
 
   editor = new ImageEditor(screenWidth, screenHeight, editorPanelWidth);
   printf("UI Manager criado. Painel width: %d\n", editorPanelWidth);
-
-  // Carrega a imagem apenas através do editor
-  editor->loadImageToLayer(0, "./src/images/img1.bmp");
-  // editor->loadImageToLayer(0, ".\\src\\images\\img1.bmp");
 
   DIR *dir;
   struct dirent *ent;
