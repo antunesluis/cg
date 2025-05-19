@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configurações
-EXECUTABLE="./editor"
-SRC_DIR="./demo/src"
+EXECUTABLE="./editor.o"
+SRC_DIR="./T3/src"
 INCLUDE_DIR="./include"
 OBJ_DIR="./obj" # Novo diretório para objetos
 LIBS="-lGL -lGLU -lglut -lm"

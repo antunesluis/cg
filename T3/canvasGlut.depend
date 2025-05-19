@@ -1,0 +1,189 @@
+# depslib dependency file v1.0
+1740581235 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\1_cv_canvasglut\src\gl_canvas2d.cpp
+	"gl_canvas2d.h"
+	<GL/glut.h>
+
+1740581020 c:\users\luisa\onedrive\documentos\cg\__demos\demos\1_cv_canvasglut\src\gl_canvas2d.h
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+	<string.h>
+	<GL/glut.h>
+	<GL/freeglut_ext.h>
+	"Vector2.h"
+
+1632060799 c:\users\luisa\onedrive\documentos\cg\__demos\demos\include\gl\glut.h
+	"freeglut_std.h"
+
+1632060797 c:\users\luisa\onedrive\documentos\cg\__demos\demos\include\gl\freeglut_std.h
+	<windows.h>
+	<EGL/egl.h>
+	<GLES/gl.h>
+	<GLES2/gl2.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<stdlib.h>
+
+1632060794 c:\users\luisa\onedrive\documentos\cg\__demos\demos\include\gl\freeglut_ext.h
+	<stdarg.h>
+
+1589217858 c:\users\luisa\onedrive\documentos\cg\__demos\demos\1_cv_canvasglut\src\vector2.h
+
+1744407913 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\1_cv_canvasglut\src\main.cpp
+	<GL/glut.h>
+	<math.h>
+	<stdio.h>
+	<stdlib.h>
+	"gl_canvas2d.h"
+	"Bola.h"
+	"Relogio.h"
+	"Botao.h"
+
+1589214882 c:\users\luisa\onedrive\documentos\cg\__demos\demos\1_cv_canvasglut\src\bola.h
+	"gl_canvas2d.h"
+
+1193164156 c:\users\luisa\onedrive\documentos\cg\__demos\demos\1_cv_canvasglut\src\relogio.h
+	"gl_canvas2d.h"
+
+1589214891 c:\users\luisa\onedrive\documentos\cg\__demos\demos\1_cv_canvasglut\src\botao.h
+	"gl_canvas2d.h"
+
+1589218349 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\1_cv_canvasglut\src\relogio.cpp
+	"Relogio.h"
+	<math.h>
+	<stdio.h>
+	<stdlib.h>
+
+1744409421 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\bmp.cpp
+	"Bmp.h"
+	"gl_canvas2d.h"
+	<string.h>
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\bmp.h
+	<stdio.h>
+	<stdlib.h>
+
+1744412087 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\gl_canvas2d.h
+	<GL/glut.h>
+	<math.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<GL/freeglut_ext.h>
+	"Vector2.h"
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\vector2.h
+	<cmath>
+	<cstdio>
+
+1744409421 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\button.cpp
+	"Button.h"
+	"gl_canvas2d.h"
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\button.h
+	"Config.h"
+	"UIElement.h"
+
+1744414799 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\config.h
+	<array>
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\uielement.h
+	"gl_canvas2d.h"
+	<functional>
+	<string>
+
+1744409421 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\checkbox.cpp
+	"Checkbox.h"
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\checkbox.h
+	"Config.h"
+	"UIElement.h"
+	"gl_canvas2d.h"
+
+1744412189 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\gl_canvas2d.cpp
+	"gl_canvas2d.h"
+	<GL/glut.h>
+
+1744414776 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\imageeditor.cpp
+	"ImageEditor.h"
+	"Config.h"
+
+1744412648 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\imageeditor.h
+	"Checkbox.h"
+	"Config.h"
+	"ImageLoaderUI.h"
+	"Layer.h"
+	"LayerManager.h"
+	"UIManager.h"
+	"gl_canvas2d.h"
+	<algorithm>
+	<string>
+	<vector>
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\imageloaderui.h
+	"Bmp.h"
+	"Layer.h"
+	<string>
+	<vector>
+
+1744410716 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\layer.h
+	"Bmp.h"
+	"Vector2.h"
+	"gl_canvas2d.h"
+	<algorithm>
+	<vector>
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\layermanager.h
+	"Layer.h"
+	<stdexcept>
+	<vector>
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\uimanager.h
+	"UIElement.h"
+	<vector>
+
+1744416585 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\imageloaderui.cpp
+	"ImageLoaderUI.h"
+	"Config.h"
+	"gl_canvas2d.h"
+	<algorithm>
+	<dirent.h>
+	<windows.h>
+
+1744412290 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\layer.cpp
+	"Layer.h"
+	<cmath>
+	<cstring>
+
+1744409421 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\layermanager.cpp
+	"LayerManager.h"
+
+1744419720 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\main.cpp
+	<GL/glut.h>
+	<dirent.h>
+	<math.h>
+	<stdlib.h>
+	"Config.h"
+	"ImageEditor.h"
+	"gl_canvas2d.h"
+
+1744409421 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\slider.cpp
+	"Slider.h"
+	"Config.h"
+
+1744409421 c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\slider.h
+	"UIElement.h"
+	"gl_canvas2d.h"
+	<functional>
+
+1744409421 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\uimanager.cpp
+	"UIManager.h"
+	"Button.h"
+	"Checkbox.h"
+	"Slider.h"
+
+1744409421 source:c:\users\luisa\onedrive\documentos\cg\__demos\demos\luisfernandoantunes-t1\src\vector2.cpp
+	"Vector2.h"
+
