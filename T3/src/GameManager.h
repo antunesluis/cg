@@ -6,6 +6,7 @@
 #include "Colors.h"
 #include "FPSController.h"
 #include "KeyCodes.h"
+#include "ParticleSystem.h"
 #include "Tank.h"
 #include "Target.h"
 #include "gl_canvas2d.h"
@@ -18,6 +19,7 @@ private:
 
   GameState currentState = GameState::MAIN_MENU;
   FPSController fpsCtrl;
+  ParticleSystem particleSystem;
 
   // Game state
   bool isEditorMode = false;
@@ -33,6 +35,11 @@ private:
   // Input state
   bool keyStates[256] = {false};
   int mouseX = 0, mouseY = 0;
+
+  // Wave control
+  int currentWave = 1;
+  float difficultyMultiplier = 1.0f;
+  const float DIFFICULTY_INCREASE_RATE = 0.2f; // 20% mais difícil a cada onda
 
   void initGame() {
     if (!track.isValid()) {
@@ -114,19 +121,66 @@ private:
     track.setTrackWidth(200.0f);
   }
 
+  // GameManager.h
   void generateRandomTargets(int count) {
     targets.clear();
+
     if (track.isValid()) {
       const auto &trackPoints = track.getTrackPoints();
       if (!trackPoints.empty()) {
+        // Distribui os alvos ao longo da pista, evitando posições muito
+        // próximas
+        float minDistanceBetweenTargets =
+            100.0f; // Distância mínima entre alvos
+        std::vector<int> usedIndices;
+
         for (int i = 0; i < count; i++) {
-          int index = rand() % trackPoints.size();
-          targets.emplace_back(trackPoints[index].x, trackPoints[index].y);
+          bool positionValid = false;
+          int attempts = 0;
+          int maxAttempts = 50;
+          Vector2 position;
+
+          // Tenta encontrar uma posição válida
+          while (!positionValid && attempts < maxAttempts) {
+            int index = rand() % trackPoints.size();
+            position = trackPoints[index];
+
+            // Verifica se está longe o suficiente de outros alvos
+            positionValid = true;
+            for (const auto &target : targets) {
+              if ((position - target.getPosition()).length() <
+                  minDistanceBetweenTargets) {
+                positionValid = false;
+                break;
+              }
+            }
+
+            // Verifica se está longe do jogador inicial
+            if (playerTank &&
+                (position - playerTank->getPosition()).length() < 200.0f) {
+              positionValid = false;
+            }
+
+            attempts++;
+          }
+
+          if (positionValid) {
+            targets.emplace_back(position.x, position.y);
+            Target &newTarget = targets.back();
+
+            // Aplica o multiplicador de dificuldade
+            newTarget.setSpeed(
+                20.0f +
+                rand() % 30 * difficultyMultiplier); // Velocidade aumentada
+            newTarget.setHealth(
+                70 + rand() % 60 * difficultyMultiplier); // Vida aumentada
+          }
         }
         return;
       }
     }
 
+    // Fallback: gera alvos em posições aleatórias se não houver pista válida
     for (int i = 0; i < count; i++) {
       float x = 100 + rand() % (screenWidth - 200);
       float y = 100 + rand() % (screenHeight - 200);
@@ -137,48 +191,75 @@ private:
   void checkCollisions() {
     auto &projectiles = playerTank->getProjectiles();
 
-    // Verifica colisões entre projéteis e alvos
+    // 1. Colisão projéteis com a pista e alvos
     for (size_t i = 0; i < projectiles.size(); i++) {
-      // Verifica colisão com as bordas da pista
+      // Colisão com a pista
       auto trackCollision = track.checkCollision(projectiles[i].getPosition(),
                                                  projectiles[i].getRadius());
       if (trackCollision.collided) {
+        particleSystem.createExplosion(projectiles[i].getPosition(),
+                                       10); // Pequena explosão
         playerTank->markProjectileForDestruction(i);
-        continue; // Pula para o próximo projétil se este já colidiu
+        continue;
       }
 
-      // Verificação existente para colisão com alvos
+      // Colisão com alvos
       for (size_t j = 0; j < targets.size(); j++) {
         if (!targets[j].isDestroyed() &&
             Collision::circleCircle(
                 projectiles[i].getPosition(), projectiles[i].getRadius(),
                 targets[j].getPosition(), targets[j].getRadius())) {
-
           targets[j].takeDamage(25);
-          playerTank->markProjectileForDestruction(i);
+          particleSystem.createExplosion(targets[j].getPosition(),
+                                         30); // Explosão grande
 
           if (targets[j].isDestroyed()) {
             score += 10;
-            if (score > highScore) {
-              highScore = score;
-            }
+            highScore = std::max(score, highScore);
           }
 
-          break; // Sai do loop interno após colisão com um alvo
+          playerTank->markProjectileForDestruction(i);
+          break;
         }
       }
     }
 
-    // Verifica colisões entre tanque e alvos (código existente)
+    // 2. Colisão tanque com alvos
     for (auto &target : targets) {
       if (!target.isDestroyed() &&
-          Collision::rectCircle(playerTank->getPosition(), 50, 30,
+          Collision::rectCircle(playerTank->getPosition(), 50,
+                                30, // Largura/altura do tanque
                                 target.getPosition(), target.getRadius())) {
         playerTank->takeDamage(2);
         target.takeDamage(5);
+        particleSystem.createExplosion(target.getPosition(),
+                                       15); // Explosão média
       }
     }
+
+    // 3. Colisão tanque com a pista
+    auto tankCollision = track.checkCollision(playerTank->getPosition(), 25.0f);
+    if (tankCollision.collided) {
+      playerTank->takeDamage(1);
+      Vector2 pushVector =
+          tankCollision.normal * (tankCollision.penetrationDepth + 1.0f);
+      playerTank->applyPush(pushVector, 1.0f);
+      particleSystem.createExplosion(playerTank->getPosition(),
+                                     5); // Pequeno efeito de impacto
+    }
+
+    // Remove projéteis e alvos destruídos
+    projectiles.erase(
+        std::remove_if(projectiles.begin(), projectiles.end(),
+                       [](const Projectile &p) { return p.shouldDestroy(); }),
+        projectiles.end());
+
+    targets.erase(
+        std::remove_if(targets.begin(), targets.end(),
+                       [](const Target &t) { return t.isDestroyed(); }),
+        targets.end());
   }
+
   void checkGameOver() {
     if (playerTank && playerTank->getHealth() <= 0) {
       currentState = GameState::GAME_OVER;
@@ -222,7 +303,21 @@ public:
     if (currentState != GameState::PLAYING)
       return;
 
+    if (targets.empty()) {
+      currentWave++;
+      difficultyMultiplier =
+          1.0f + (currentWave - 1) * DIFFICULTY_INCREASE_RATE;
+      generateRandomTargets(10 + currentWave * 2); // Mais alvos a cada onda
+      printf("Wave %d started! Difficulty: %.2f", currentWave,
+             difficultyMultiplier);
+    }
+
     playerTank->update(dt);
+
+    particleSystem.update(fpsCtrl.deltaTime()); // Atualiza partículas
+    for (auto &target : targets) {
+      target.update(fpsCtrl.deltaTime(), track.getTrackPoints()); // Move alvos
+    }
 
     auto collision = track.checkCollision(playerTank->getPosition(), 25.0f);
     if (collision.collided) {
@@ -239,10 +334,6 @@ public:
         std::remove_if(targets.begin(), targets.end(),
                        [](const Target &t) { return t.isDestroyed(); }),
         targets.end());
-
-    if (targets.empty()) {
-      generateRandomTargets(10);
-    }
   }
 
   void render() {
@@ -256,8 +347,10 @@ public:
       return;
     }
 
+    // Renderização do jogo
     Colors::backgroundDefault();
     track.render();
+    particleSystem.render();
 
     for (auto &target : targets) {
       target.render();
@@ -267,15 +360,23 @@ public:
       playerTank->render();
     }
 
+    // UI Principal (FPS/Score/Wave)
     Colors::uiText();
     CV::text(10, 10, ("FPS: " + std::to_string((int)fpsCtrl.fps())).c_str());
     CV::text(10, 30, ("Score: " + std::to_string(score)).c_str());
+    CV::text(10, 50, ("Wave: " + std::to_string(currentWave)).c_str());
 
+    // UI do Modo Editor
     if (isEditorMode) {
-      CV::text(10, 50, "EDITOR MODE - Click to add control points");
-      CV::text(10, 70, "Z - Remove last point | C - Clear track");
+      CV::text(10, 80, "=== EDITOR MODE ===");
+      CV::text(10, 100, "Click: Add control point");
+      CV::text(10, 120, "Z: Remove last point");
+      CV::text(10, 140, "C: Clear track");
+      CV::text(10, 160, "E: Save and exit");
+      CV::text(10, 180, "M: Exit without saving");
     }
 
+    // UI Global
     if (currentState != GameState::MAIN_MENU) {
       Colors::uiText();
       CV::text(10, screenHeight - 30, "Press M to return to Main Menu");

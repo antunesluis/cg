@@ -56,7 +56,7 @@ public:
   // Divisão por escalar
   Vector2 operator/(const float scalar) const {
     if (scalar == 0.0f) {
-      printf("\n\nErro: Divisão por zero");
+      // printf("\n\nErro: Divisão por zero");
       return Vector2(0, 0);
     }
     Vector2 aux(x / scalar, y / scalar);
