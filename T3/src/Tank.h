@@ -1,6 +1,7 @@
 #ifndef TANK_H
 #define TANK_H
 
+#include "Colors.h"
 #include "Polygon.h"
 #include "Projectile.h"
 #include "Vector2.h"
@@ -10,7 +11,7 @@ private:
   Vector2 position;
   float baseAngle;   // Ângulo da base em radianos
   float turretAngle; // Ângulo da torre em radianos
-  float speed = 100.0f;
+  float speed = 80.0f;
   float rotationSpeed = 2.0f;
 
   // Partes do tanque
@@ -18,7 +19,7 @@ private:
   Polygon turret; // Canhão
 
   // Saúde
-  float health = 100.0f;
+  float health = 150.0f;
   const float maxHealth = 100.0f;
 
   // Controles
@@ -66,12 +67,12 @@ public:
 
   void render() {
     // Desenha o corpo principal
-    CV::color(0.5f, 0.5f, 0.5f); // Cinza
+    Colors::tankBase();
     base.transform(baseAngle, position);
     base.fill();
 
     // Desenha o canhão (posição ajustada)
-    CV::color(4);
+    Colors::tankTurret();
     Vector2 turretPos =
         position + Vector2(cos(turretAngle) * 25, sin(turretAngle) * 25);
     turret.transform(turretAngle, turretPos);
@@ -148,6 +149,15 @@ public:
       projectiles[index].markForDestruction();
     }
   }
+
+  Vector2 &getPositionRef() { return position; }
+
+  // Método para aplicar força de repulsão
+  void applyPush(const Vector2 &direction, float force) {
+    position += direction * force;
+  }
+
+  float getHealth() const { return health; }
 };
 
 #endif

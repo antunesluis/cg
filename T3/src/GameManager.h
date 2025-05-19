@@ -1,8 +1,9 @@
-#ifndef GAMEMANAGER_H
-#define GAMEMANAGER_H
+#ifndef GAME_MANAGER_H
+#define GAME_MANAGER_H
 
 #include "BezierTrack.h"
 #include "Collision.h"
+#include "Colors.h"
 #include "FPSController.h"
 #include "KeyCodes.h"
 #include "Tank.h"
@@ -13,11 +14,15 @@
 
 class GameManager {
 private:
+  enum class GameState { MAIN_MENU, PLAYING, EDITOR, GAME_OVER };
+
+  GameState currentState = GameState::MAIN_MENU;
   FPSController fpsCtrl;
 
   // Game state
   bool isEditorMode = false;
   int score = 0;
+  int highScore = 0;
 
   // Game objects
   Tank *playerTank = nullptr;
@@ -30,48 +35,91 @@ private:
   int mouseX = 0, mouseY = 0;
 
   void initGame() {
-    playerTank = new Tank(screenWidth / 2, screenHeight / 2);
-
-    // Criar uma pista padrão se nenhuma for carregada
     if (!track.isValid()) {
       createDefaultTrack();
     }
 
+    Vector2 startPos = track.getRandomStartPosition();
+    playerTank = new Tank(startPos.x, startPos.y);
     generateRandomTargets(10);
+  }
+
+  void renderMainMenu() {
+    Colors::backgroundDefault();
+
+    Colors::uiText();
+    CV::text(screenWidth / 2 - 100, screenHeight / 2 - 100,
+             "TANK GAME - MAIN MENU");
+
+    Colors::uiText();
+    CV::text(screenWidth / 2 - 50, screenHeight / 2, "1 - Start Default Track");
+    CV::text(screenWidth / 2 - 50, screenHeight / 2 + 50, "2 - Track Editor");
+
+    CV::color(0.8, 0.8, 0.8);
+    Colors::uiTextHighlight();
+    CV::text(screenWidth / 2 - 100, screenHeight / 2 + 150,
+             "Press ESC to quit");
+
+    // Mostra high score
+    Colors::uiTextHighlight();
+    CV::text(screenWidth / 2 - 80, screenHeight / 2 + 200,
+             ("High Score: " + std::to_string(highScore)).c_str());
+  }
+
+  void renderGameOver() {
+    Colors::backgroundDefault();
+
+    Colors::red();
+    CV::text(screenWidth / 2 - 100, screenHeight / 2 - 50, "GAME OVER");
+
+    Colors::uiText();
+    CV::text(screenWidth / 2 - 80, screenHeight / 2 + 20,
+             ("Score: " + std::to_string(score)).c_str());
+    CV::text(screenWidth / 2 - 100, screenHeight / 2 + 70,
+             ("High Score: " + std::to_string(highScore)).c_str());
+
+    CV::text(screenWidth / 2 - 100, screenHeight / 2 + 120,
+             "Press R to Restart");
+    CV::text(screenWidth / 2 - 100, screenHeight / 2 + 170,
+             "Press M for Main Menu");
   }
 
   void createDefaultTrack() {
     track.clear();
-
-    // Criar uma pista circular simples
     float centerX = screenWidth / 2;
     float centerY = screenHeight / 2;
-    float radius = 350;
+    float radius = 380;
+    float controlOffset = radius * 0.6f; // Distância dos pontos de controle
 
-    // Pontos para uma pista circular
+    // Ponto 1 (leste)
     track.addControlPoint(centerX + radius, centerY);
-    track.addControlPoint(centerX + radius, centerY - radius);
+    track.addControlPoint(centerX + radius, centerY - controlOffset);
+    track.addControlPoint(centerX + controlOffset, centerY - radius);
+
+    // Ponto 2 (norte)
     track.addControlPoint(centerX, centerY - radius);
+    track.addControlPoint(centerX - controlOffset, centerY - radius);
+    track.addControlPoint(centerX - radius, centerY - controlOffset);
+
+    // Ponto 3 (oeste)
     track.addControlPoint(centerX - radius, centerY);
-    track.addControlPoint(centerX - radius, centerY + radius);
+    track.addControlPoint(centerX - radius, centerY + controlOffset);
+    track.addControlPoint(centerX - controlOffset, centerY + radius);
+
+    // Ponto 4 (sul)
     track.addControlPoint(centerX, centerY + radius);
-    track.addControlPoint(centerX + radius, centerY);
-    track.addControlPoint(centerX + radius, centerY - radius);
-    track.addControlPoint(centerX, centerY - radius);
-    track.addControlPoint(centerX - radius, centerY);
+    track.addControlPoint(centerX + controlOffset, centerY + radius);
+    track.addControlPoint(centerX + radius, centerY + controlOffset);
 
-    track.setTrackWidth(150.0f);
+    track.setTrackWidth(200.0f);
   }
 
   void generateRandomTargets(int count) {
     targets.clear();
-
     if (track.isValid()) {
-      // Obter pontos na pista para posicionar os alvos
       const auto &trackPoints = track.getTrackPoints();
       if (!trackPoints.empty()) {
         for (int i = 0; i < count; i++) {
-          // Escolher pontos aleatórios na pista
           int index = rand() % trackPoints.size();
           targets.emplace_back(trackPoints[index].x, trackPoints[index].y);
         }
@@ -79,7 +127,6 @@ private:
       }
     }
 
-    // Fallback para posicionamento aleatório se a pista não estiver pronta
     for (int i = 0; i < count; i++) {
       float x = 100 + rand() % (screenWidth - 200);
       float y = 100 + rand() % (screenHeight - 200);
@@ -90,8 +137,17 @@ private:
   void checkCollisions() {
     auto &projectiles = playerTank->getProjectiles();
 
-    // Colisão projéteis-alvos
+    // Verifica colisões entre projéteis e alvos
     for (size_t i = 0; i < projectiles.size(); i++) {
+      // Verifica colisão com as bordas da pista
+      auto trackCollision = track.checkCollision(projectiles[i].getPosition(),
+                                                 projectiles[i].getRadius());
+      if (trackCollision.collided) {
+        playerTank->markProjectileForDestruction(i);
+        continue; // Pula para o próximo projétil se este já colidiu
+      }
+
+      // Verificação existente para colisão com alvos
       for (size_t j = 0; j < targets.size(); j++) {
         if (!targets[j].isDestroyed() &&
             Collision::circleCircle(
@@ -103,12 +159,17 @@ private:
 
           if (targets[j].isDestroyed()) {
             score += 10;
+            if (score > highScore) {
+              highScore = score;
+            }
           }
+
+          break; // Sai do loop interno após colisão com um alvo
         }
       }
     }
 
-    // Colisão tanque-alvos
+    // Verifica colisões entre tanque e alvos (código existente)
     for (auto &target : targets) {
       if (!target.isDestroyed() &&
           Collision::rectCircle(playerTank->getPosition(), 50, 30,
@@ -117,36 +178,37 @@ private:
         target.takeDamage(5);
       }
     }
-
-    // Colisão do tanque com a pista
-    if (track.isValid()) {
-      if (track.checkTankCollision(playerTank->getPosition(), 25.0f)) {
-        playerTank->takeDamage(1);
-      }
+  }
+  void checkGameOver() {
+    if (playerTank && playerTank->getHealth() <= 0) {
+      currentState = GameState::GAME_OVER;
     }
-
-    // Colisão dos projéteis com a pista
-    // (Implementação opcional - deixei comentada para simplificar)
-    /*
-    for (size_t i = 0; i < projectiles.size(); i++) {
-      if (track.isValid() && !track.isInsideTrack(projectiles[i].getPosition()))
-    { playerTank->markProjectileForDestruction(i);
-      }
-    }
-    */
   }
 
-  void resetGame() {
+  void restartGame() {
     score = 0;
     if (playerTank) {
-      playerTank->getPosition().set(screenWidth / 2, screenHeight / 2);
-      playerTank->takeDamage(-100); // Restaura a vida
+      delete playerTank;
+      playerTank = nullptr;
     }
-    generateRandomTargets(10);
+    targets.clear();
+    initGame();
+    currentState = GameState::PLAYING;
+  }
+
+  void returnToMainMenu() {
+    if (playerTank) {
+      delete playerTank;
+      playerTank = nullptr;
+    }
+    targets.clear();
+    track.setEditMode(false);
+    isEditorMode = false;
+    currentState = GameState::MAIN_MENU;
   }
 
 public:
-  GameManager() { initGame(); }
+  GameManager() { currentState = GameState::MAIN_MENU; }
 
   ~GameManager() {
     if (playerTank)
@@ -157,29 +219,46 @@ public:
     fpsCtrl.update();
     float dt = fpsCtrl.deltaTime();
 
-    if (!isEditorMode) {
-      playerTank->update(dt);
-      checkCollisions();
+    if (currentState != GameState::PLAYING)
+      return;
 
-      // Remove alvos destruídos
-      targets.erase(
-          std::remove_if(targets.begin(), targets.end(),
-                         [](const Target &t) { return t.isDestroyed(); }),
-          targets.end());
+    playerTank->update(dt);
 
-      if (targets.empty()) {
-        resetGame();
-      }
+    auto collision = track.checkCollision(playerTank->getPosition(), 25.0f);
+    if (collision.collided) {
+      playerTank->takeDamage(1);
+      Vector2 pushVector =
+          collision.normal * (collision.penetrationDepth + 1.0f);
+      playerTank->applyPush(pushVector, 1.0f);
+    }
+
+    checkCollisions();
+    checkGameOver();
+
+    targets.erase(
+        std::remove_if(targets.begin(), targets.end(),
+                       [](const Target &t) { return t.isDestroyed(); }),
+        targets.end());
+
+    if (targets.empty()) {
+      generateRandomTargets(10);
     }
   }
 
   void render() {
-    CV::clear(0.2f, 0.2f, 0.2f);
+    if (currentState == GameState::MAIN_MENU) {
+      renderMainMenu();
+      return;
+    }
 
-    // Renderizar a pista
+    if (currentState == GameState::GAME_OVER) {
+      renderGameOver();
+      return;
+    }
+
+    Colors::backgroundDefault();
     track.render();
 
-    // Render targets
     for (auto &target : targets) {
       target.render();
     }
@@ -188,42 +267,87 @@ public:
       playerTank->render();
     }
 
-    CV::color(1, 1, 1);
+    Colors::uiText();
     CV::text(10, 10, ("FPS: " + std::to_string((int)fpsCtrl.fps())).c_str());
     CV::text(10, 30, ("Score: " + std::to_string(score)).c_str());
 
     if (isEditorMode) {
       CV::text(10, 50, "EDITOR MODE - Click to add control points");
+      CV::text(10, 70, "Z - Remove last point | C - Clear track");
+    }
+
+    if (currentState != GameState::MAIN_MENU) {
+      Colors::uiText();
+      CV::text(10, screenHeight - 30, "Press M to return to Main Menu");
     }
   }
 
   void keyboard(int key) {
-    keyStates[key] = true;
-
-    switch (key) {
-    case Key::Letter::D:
-      playerTank->startRotatingLeft();
-      break;
-
-    case Key::Letter::A:
-      playerTank->startRotatingRight();
-      break;
+    if (key == 27) { // ESC
+      exit(0);
     }
 
-    // Toggle editor mode with 'E'
-    if (key == 'e' || key == 'E') {
-      isEditorMode = !isEditorMode;
-      track.setEditMode(isEditorMode);
+    if (currentState == GameState::MAIN_MENU) {
+      if (key == '1') {
+        currentState = GameState::PLAYING;
+        createDefaultTrack();
+        initGame();
+      } else if (key == '2') {
+        currentState = GameState::EDITOR;
+        track.clear();
+        track.setEditMode(true);
+        isEditorMode = true;
+      }
+      return;
     }
 
-    // Remover último ponto de controle com 'Z' no modo editor
-    if (isEditorMode && (key == 'z' || key == 'Z')) {
-      track.removeLastControlPoint();
+    if (currentState == GameState::GAME_OVER) {
+      if (key == 'r' || key == 'R') {
+        restartGame();
+      } else if (key == 'm' || key == 'M') {
+        returnToMainMenu();
+      }
+      return;
     }
 
-    // Limpar pista com 'C' no modo editor
-    if (isEditorMode && (key == 'c' || key == 'C')) {
-      track.clear();
+    if ((key == 'm' || key == 'M') && currentState != GameState::MAIN_MENU) {
+      returnToMainMenu();
+      return;
+    }
+
+    if (currentState == GameState::PLAYING && playerTank) {
+      switch (key) {
+      case 'd':
+      case 'D':
+        playerTank->startRotatingLeft();
+        break;
+      case 'a':
+      case 'A':
+        playerTank->startRotatingRight();
+        break;
+      }
+    }
+
+    if (currentState == GameState::EDITOR) {
+      switch (key) {
+      case 'e':
+      case 'E':
+        currentState = GameState::PLAYING;
+        track.setEditMode(false);
+        if (!playerTank) {
+          isEditorMode = false;
+          initGame();
+        }
+        break;
+      case 'z':
+      case 'Z':
+        track.removeLastControlPoint();
+        break;
+      case 'c':
+      case 'C':
+        track.clear();
+        break;
+      }
     }
   }
 
@@ -231,12 +355,15 @@ public:
     keyStates[key] = false;
 
     switch (key) {
-    case Key::Letter::D:
-      playerTank->stopRotatingLeft();
+    case 'd':
+    case 'D':
+      if (playerTank)
+        playerTank->stopRotatingLeft();
       break;
-
-    case Key::Letter::A:
-      playerTank->stopRotatingRight();
+    case 'a':
+    case 'A':
+      if (playerTank)
+        playerTank->stopRotatingRight();
       break;
     }
   }
@@ -245,20 +372,17 @@ public:
     mouseX = x;
     mouseY = y;
 
-    playerTank->setTurretAngle(x, y);
-
-    // Adicionar pontos de controle no modo editor
-    if (isEditorMode && button == 0 &&
-        state == 0) { // Left mouse button pressed
-      track.addControlPoint(x, y);
+    if (playerTank) {
+      playerTank->setTurretAngle(x, y);
     }
-    // Atirar fora do modo editor
-    else if (!isEditorMode && button == 0 && state == 0) {
+
+    if (isEditorMode && button == 0 && state == 0) {
+      track.addControlPoint(x, y);
+    } else if (!isEditorMode && button == 0 && state == 0 && playerTank) {
       playerTank->shoot();
     }
   }
 
-  // Getters for keyboard and mouse state
   bool isKeyPressed(int key) const { return keyStates[key]; }
   int getMouseX() const { return mouseX; }
   int getMouseY() const { return mouseY; }

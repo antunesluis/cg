@@ -1,6 +1,8 @@
+
 #ifndef PROJECTILE_H
 #define PROJECTILE_H
 
+#include "Colors.h"
 #include "Vector2.h"
 #include "gl_canvas2d.h"
 
@@ -27,8 +29,13 @@ public:
   }
 
   void render() const {
-    CV::color(1.0f, 0.0f, 0.0f); // Vermelho
+    Colors::projectile();
     CV::circleFill(position.x, position.y, radius, 12);
+
+    // Opcional: adicionar efeito visual (rastro)
+    CV::color(1.0f, 0.6f, 0.2f, 0.5f); // Cor laranja transparente
+    CV::circleFill(position.x - direction.x * 5, position.y - direction.y * 5,
+                   radius * 0.7f, 8);
   }
 
   void markForDestruction() { shouldBeDestroyed = true; }
