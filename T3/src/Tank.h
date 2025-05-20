@@ -1,91 +1,135 @@
 #ifndef TANK_H
 #define TANK_H
 
-#include "Colors.h"
-#include "Polygon.h"
-#include "Projectile.h"
 #include "Vector2.h"
+#include "Colors.h"
+#include "Projectile.h"
+#include "gl_canvas2d.h"
+#include <vector>
 
 class Tank {
 private:
-  Vector2 position;
-  float baseAngle;   // Ângulo da base em radianos
-  float turretAngle; // Ângulo da torre em radianos
-  float speed = 80.0f;
-  float rotationSpeed = 2.0f;
+    // Propriedades do tanque
+    Vector2 position;
+    float baseAngle;    // Ângulo da base em radianos
+    float turretAngle;  // Ângulo da torre em radianos
+    float speed = 80.0f;
+    float rotationSpeed = 2.0f;
 
-  // Partes do tanque
-  Polygon base;   // Corpo principal
-  Polygon turret; // Canhão
+    // Geometria do tanque
+    std::vector<Vector2> baseVertices;
+    std::vector<Vector2> turretVertices;
+    std::vector<Vector2> transformedBaseVertices;
+    std::vector<Vector2> transformedTurretVertices;
 
-  // Saúde
-  float health = 150.0f;
-  const float maxHealth = 100.0f;
+    // Saúde
+    float health = 150.0f;
+    const float maxHealth = 100.0f;
 
-  // Controles
-  bool rotatingLeft = false;
-  bool rotatingRight = false;
+    // Controles
+    bool rotatingLeft = false;
+    bool rotatingRight = false;
 
-  // Disparo
-  float fireCooldown = 0.3f;
-  float timeSinceLastShot = 0.0f;
-  std::vector<Projectile> projectiles;
+    // Disparo
+    float fireCooldown = 0.3f;
+    float timeSinceLastShot = 0.0f;
+    std::vector<Projectile> projectiles;
+
+    // Métodos auxiliares de desenho
+    void createBaseRectangle(float width, float height) {
+        baseVertices.clear();
+        float halfW = width / 2;
+        float halfH = height / 2;
+        baseVertices = {Vector2(-halfW, -halfH), Vector2(-halfW, halfH),
+                       Vector2(halfW, halfH), Vector2(halfW, -halfH)};
+        transformedBaseVertices = baseVertices;
+    }
+
+    void createTurretRectangle(float width, float height) {
+        turretVertices.clear();
+        float halfW = width / 2;
+        float halfH = height / 2;
+        turretVertices = {Vector2(-halfW, -halfH), Vector2(-halfW, halfH),
+                         Vector2(halfW, halfH), Vector2(halfW, -halfH)};
+        transformedTurretVertices = turretVertices;
+    }
+
+    void transformVertices(std::vector<Vector2>& original, std::vector<Vector2>& transformed, float angle, const Vector2& pos) {
+        float cosA = cos(angle);
+        float sinA = sin(angle);
+
+        for (size_t i = 0; i < original.size(); i++) {
+            float x = original[i].x * cosA - original[i].y * sinA;
+            float y = original[i].x * sinA + original[i].y * cosA;
+            transformed[i].x = x + pos.x;
+            transformed[i].y = y + pos.y;
+        }
+    }
+
+    void drawPolygon(const std::vector<Vector2>& vertices) const {
+        if (vertices.size() < 3) return;
+
+        std::vector<float> vx, vy;
+        for (const auto& v : vertices) {
+            vx.push_back(v.x);
+            vy.push_back(v.y);
+        }
+        CV::polygonFill(vx.data(), vy.data(), (int)vx.size());
+    }
 
 public:
-  Tank(float x, float y) : position(x, y), baseAngle(0), turretAngle(0) {
-    // Configura as partes do tanque
-    base.createRectangle(50, 30);   // Corpo principal
-    turret.createRectangle(40, 10); // Canhão
-    std::vector<Projectile> projectiles;
-  }
-
-  void update(float deltaTime) {
-    // Atualiza rotação
-    if (rotatingLeft) {
-      baseAngle += rotationSpeed * deltaTime;
-    } else if (rotatingRight) {
-      baseAngle -= rotationSpeed * deltaTime;
+    Tank(float x, float y) : position(x, y), baseAngle(0), turretAngle(0) {
+        createBaseRectangle(50, 30);    // Corpo principal
+        createTurretRectangle(40, 10);  // Canhão
     }
 
-    // Movimentação na direção atual
-    position.x += cos(baseAngle) * speed * deltaTime;
-    position.y += sin(baseAngle) * speed * deltaTime;
+    void update(float deltaTime) {
+        // Atualiza rotação
+        if (rotatingLeft) {
+            baseAngle += rotationSpeed * deltaTime;
+        } else if (rotatingRight) {
+            baseAngle -= rotationSpeed * deltaTime;
+        }
 
-    // Atualiza cooldown do disparo
-    timeSinceLastShot += deltaTime;
+        // Movimentação
+        position.x += cos(baseAngle) * speed * deltaTime;
+        position.y += sin(baseAngle) * speed * deltaTime;
 
-    // Atualiza projéteis
-    for (auto it = projectiles.begin(); it != projectiles.end();) {
-      it->update(deltaTime);
-      if (it->shouldDestroy()) {
-        it = projectiles.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  }
+        // Atualiza cooldown do disparo
+        timeSinceLastShot += deltaTime;
 
-  void render() {
-    // Desenha o corpo principal
-    Colors::tankBase();
-    base.transform(baseAngle, position);
-    base.fill();
-
-    // Desenha o canhão (posição ajustada)
-    Colors::tankTurret();
-    Vector2 turretPos =
-        position + Vector2(cos(turretAngle) * 25, sin(turretAngle) * 25);
-    turret.transform(turretAngle, turretPos);
-    turret.fill();
-
-    // Desenha projéteis
-    for (auto &projectile : projectiles) {
-      projectile.render();
+        // Atualiza projéteis
+        for (auto it = projectiles.begin(); it != projectiles.end();) {
+            it->update(deltaTime);
+            if (it->shouldDestroy()) {
+                it = projectiles.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
 
-    // Desenha a barra de saúde
-    drawHealthBar();
-  }
+    void render() {
+        // Desenha o corpo principal
+        Colors::tankBase();
+        transformVertices(baseVertices, transformedBaseVertices, baseAngle, position);
+        drawPolygon(transformedBaseVertices);
+
+        // Desenha o canhão
+        Colors::tankTurret();
+        Vector2 turretPos = position + Vector2(cos(turretAngle) * 25, sin(turretAngle) * 25);
+        transformVertices(turretVertices, transformedTurretVertices, turretAngle, turretPos);
+        drawPolygon(transformedTurretVertices);
+
+        // Desenha projéteis
+        for (auto& projectile : projectiles) {
+            projectile.render();
+        }
+
+        // Desenha barra de saúde
+        drawHealthBar();
+    }
+
 
   void shoot() {
     if (timeSinceLastShot >= fireCooldown) {
