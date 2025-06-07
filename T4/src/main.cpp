@@ -6,7 +6,14 @@
 
 int screenWidth = 1280, screenHeight = 720;
 
-void render() { CV::clear(0, 0, 0); }
+void render()
+{
+    CV::clear(0, 0, 0);
+
+    CV::translate(screenWidth / 2.0, screenHeight / 2.0);
+    CV::color(0.5, 0.5, 0.5);
+    CV::line(0, -screenHeight / 2.0, 0, screenHeight / 2.0);
+}
 
 void keyboard(int key) { printf("\nTecla: %d", key); }
 

@@ -1,2 +1,12 @@
-Format:
-  OrganizeIncludes: Never
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 120
+BraceWrapping:
+  AfterFunction: true
+  AfterClass: true
+  AfterEnum: true
+  AfterStruct: true
+  BeforeElse: false
+  BeforeCatch: false
+  AfterNamespace: true
+BreakBeforeBraces: Custom

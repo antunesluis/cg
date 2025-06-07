@@ -12,60 +12,65 @@
 #include <string>
 #include <vector>
 
-enum class ToolType { BRUSH, ERASER, FILL };
+enum class ToolType
+{
+    BRUSH,
+    ERASER,
+    FILL
+};
 
-class ImageEditor {
-private:
-  UIManager *uiManager;
-  LayerManager *layerManager;
-  ToolType currentTool = ToolType::BRUSH;
+class ImageEditor
+{
+  private:
+    UIManager *uiManager;
+    LayerManager *layerManager;
+    ToolType currentTool = ToolType::BRUSH;
 
-  ImageLoaderUI imageLoaderUI;
-  bool placingImage = false;
-  float placementX, placementY;
-  std::string currentImagePath;
-  float previewX, previewY;
+    ImageLoaderUI imageLoaderUI;
+    bool placingImage = false;
+    float placementX, placementY;
+    std::string currentImagePath;
+    float previewX, previewY;
 
-  bool drawing;
-  int brushSize;
-  unsigned char currentColor[3];
-  int canvasWidth, canvasHeight, editorPanelWidth;
-  int scrollOffset = 0;
+    bool drawing;
+    int brushSize;
+    unsigned char currentColor[3];
+    int canvasWidth, canvasHeight, editorPanelWidth;
+    int scrollOffset = 0;
 
-  float currentBrightness = 1.0f;
-  float currentContrast = 1.0f;
-  float currentSaturation = 1.0f;
+    float currentBrightness = 1.0f;
+    float currentContrast = 1.0f;
+    float currentSaturation = 1.0f;
 
-  void renderColorPicker();
-  bool handleColorPickerClick(int x, int y);
+    void renderColorPicker();
+    bool handleColorPickerClick(int x, int y);
 
-public:
-  ImageEditor(int width, int height, int panelWidth);
-  ~ImageEditor();
+  public:
+    ImageEditor(int width, int height, int panelWidth);
+    ~ImageEditor();
 
-  // Canva handling methods
-  void render(int mouseX, int mouseY);
-  void handleMouse(int button, int state, int wheel, int direction, int x,
-                   int y);
-  void handleKeyboard(unsigned char key);
-  void handleKeyboardUp(unsigned char key);
+    // Canva handling methods
+    void render(int mouseX, int mouseY);
+    void handleMouse(int button, int state, int wheel, int direction, int x, int y);
+    void handleKeyboard(unsigned char key);
+    void handleKeyboardUp(unsigned char key);
 
-  // Image operations
-  void loadImageToLayer(int layerIndex, const char *filename);
-  void handleImagePlacement(int x, int y);
+    // Image operations
+    void loadImageToLayer(int layerIndex, const char *filename);
+    void handleImagePlacement(int x, int y);
 
-private:
-  void renderCheckerBackground();
-  void renderPanelBackground();
-  void renderLayersList();
-  void renderLayers();
-  void renderBrushInfo();
-  void renderUI();
+  private:
+    void renderCheckerBackground();
+    void renderPanelBackground();
+    void renderLayersList();
+    void renderLayers();
+    void renderBrushInfo();
+    void renderUI();
 
-  void initUI();
-  bool fileExists(const char *filename);
-  void handleLayerListClick(int x, int y, int button, int state);
-  void updateImageEffects();
+    void initUI();
+    bool fileExists(const char *filename);
+    void handleLayerListClick(int x, int y, int button, int state);
+    void updateImageEffects();
 };
 
 #endif

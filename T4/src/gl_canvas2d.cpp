@@ -67,6 +67,14 @@ void CV::line(float x1, float y1, float x2, float y2)
     glEnd();
 }
 
+void CV::line(Vector2 p1, Vector2 p2)
+{
+    glBegin(GL_LINES);
+    glVertex2d(p1.x, p1.y);
+    glVertex2d(p2.x, p2.y);
+    glEnd();
+}
+
 void CV::rect(float x1, float y1, float x2, float y2)
 {
     glBegin(GL_LINE_LOOP);
@@ -119,7 +127,8 @@ void CV::polygonFill(float vx[], float vy[], int elems)
 // existem outras fontes de texto que podem ser usadas
 //   GLUT_BITMAP_9_BY_15
 //   GLUT_BITMAP_TIMES_ROMAN_10
-//   etc. Para mais detalhes, acesse https://www.opengl.org/resources/libraries/glut/spec3/node76.html
+//   etc. Para mais detalhes, acesse
+//   https://www.opengl.org/resources/libraries/glut/spec3/node76.html
 // Vejam tambem a funcao glutStrokeWidth(GLUTstrokeFont font, int character)
 // Para textos de qualidade, ver:
 //   https://www.freetype.org/
@@ -140,8 +149,8 @@ void CV::circle(float x, float y, float radius, int div)
     float ang = 0, x1, y1;
     float inc = PI_2 / div;
     glBegin(GL_LINE_LOOP);
-    for (int lado = 1; lado <= div;
-         lado++) // GL_LINE_LOOP desenha um poligono fechado. Liga automaticamente o primeiro e ultimio vertices.
+    for (int lado = 1; lado <= div; lado++) // GL_LINE_LOOP desenha um poligono fechado. Liga
+                                            // automaticamente o primeiro e ultimio vertices.
     {
         x1 = (cos(ang) * radius);
         y1 = (sin(ang) * radius);
@@ -205,8 +214,8 @@ void motion(int x, int y) { ConvertMouseCoord(-2, -2, -2, -2, x, y); }
 void ConvertMouseCoord(int button, int state, int wheel, int direction, int x, int y)
 {
 #if Y_CANVAS_CRESCE_PARA_CIMA == TRUE
-    y = *scrHeight - y; // deve-se inverter a coordenada y do mouse se o y da canvas crescer para cima. O y do mouse
-                        // sempre cresce para baixo.
+    y = *scrHeight - y; // deve-se inverter a coordenada y do mouse se o y da canvas crescer
+                        // para cima. O y do mouse sempre cresce para baixo.
 #else
     // nao faz nada.
 #endif
