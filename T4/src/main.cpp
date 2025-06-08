@@ -1,32 +1,49 @@
+#include "Constants.h"
+#include "Editor.h"
 #include "gl_canvas2d.h"
-#include <GL/glut.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-int screenWidth = 1280, screenHeight = 720;
+Editor *editor = nullptr;
+int screenWidth = Constants::SCREEN_WIDTH;
+int screenHeight = Constants::SCREEN_HEIGHT;
 
 void render()
 {
-    CV::clear(0, 0, 0);
-
-    CV::translate(screenWidth / 2.0, screenHeight / 2.0);
-    CV::color(0.5, 0.5, 0.5);
-    CV::line(0, -screenHeight / 2.0, 0, screenHeight / 2.0);
+    if (editor) {
+        editor->render();
+    }
 }
 
-void keyboard(int key) { printf("\nTecla: %d", key); }
+void keyboard(int key)
+{
+    if (editor) {
+        editor->handleKeyboard(key);
+    }
+}
 
-void keyboardUp(int key) { printf("\nLiberou: %d", key); }
+void keyboardUp(int key)
+{
+    if (editor) {
+        editor->handleKeyboardUp(key);
+    }
+}
 
 void mouse(int button, int state, int wheel, int direction, int x, int y)
 {
-    printf("\nmouse %d %d %d %d %d %d", button, state, wheel, direction, x, y);
+    if (editor) {
+        editor->onMouse(button, state, wheel, direction, x, y);
+    }
 }
 
 int main(void)
 {
-    CV::init(&screenWidth, &screenHeight, "Canva 2D - Demo"), CV::run();
+    editor = new Editor(screenWidth, screenHeight);
+    editor->initialize();
+
+    CV::init(&screenWidth, &screenHeight, "Trabalho 4");
+    CV::run();
+
+    delete editor;
+    editor = nullptr;
 
     return 0;
 }
