@@ -2,7 +2,7 @@
 
 # Configurações
 EXECUTABLE="./editor.o"
-SRC_DIR="./T3/src"
+SRC_DIR="./T4/src"
 INCLUDE_DIR="./include"
 OBJ_DIR="./obj" # Novo diretório para objetos
 LIBS="-lGL -lGLU -lglut -lm"
@@ -18,6 +18,8 @@ rm -f "$OBJ_DIR"/*.o "$EXECUTABLE"
 SOURCES=(
     "main.cpp"
     "gl_canvas2d.cpp"
+    "BezierCurve2D.cpp"
+    "Editor.cpp"
 )
 
 # Compilação

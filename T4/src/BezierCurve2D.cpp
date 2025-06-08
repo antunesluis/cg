@@ -4,11 +4,6 @@
 
 BCurve2D::BCurve2D() : needsUpdate(true) {}
 
-BCurve2D::BCurve2D(const std::vector<Vector2> &initialPoints) : controlPoints(initialPoints), needsUpdate(true)
-{
-    updateCurvePoints();
-}
-
 void BCurve2D::addControlPoint(Vector2 point)
 {
     controlPoints.push_back(point);
