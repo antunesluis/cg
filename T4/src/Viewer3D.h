@@ -20,10 +20,18 @@ class Viewer3D
     int viewportX, viewportY;
     int viewportWidth, viewportHeight;
 
+    bool wireframeMode = false;
+    bool surfaceMode = true;
+    bool normalsMode = false;
+
     // Projeção
     Vector2 projectPoint(const Vector3 &point3D) const;
     void drawAxes() const;
     void drawGrid() const;
+
+    void drawTriangle(const Triangle3D &triangle) const;
+    void drawWireframe(const Triangle3D &triangle) const;
+    void drawNormal(const Triangle3D &triangle) const;
 
   public:
     Viewer3D(int x, int y, int width, int height);

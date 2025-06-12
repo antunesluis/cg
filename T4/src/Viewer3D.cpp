@@ -1,12 +1,14 @@
 #include "Viewer3D.h"
 #include "Constants.h"
+#include "Object3D.h"
 #include "gl_canvas2d.h"
 #include <math.h>
 #include <stdio.h>
 
 Viewer3D::Viewer3D(int x, int y, int width, int height)
     : viewportX(x), viewportY(y), viewportWidth(width), viewportHeight(height), rotationX(-0.3f), rotationY(0.3f),
-      zoom(1.5f), offset(width / 2, height / 2), object(Constants::DEFAULT_ROTATION_STEPS)
+      zoom(1.5f), offset(width / 2, height / 2), object(Constants::DEFAULT_ROTATION_STEPS), wireframeMode(true),
+      surfaceMode(true), normalsMode(false)
 {
 }
 
@@ -29,7 +31,9 @@ void Viewer3D::updateObject(const std::vector<Vector2> &profile)
         // Converte coordenadas da tela para coordenadas do mundo
         float worldX = (point.x - Constants::PANEL_WIDTH / 2) * 0.3f;
         float worldY = -(point.y - Constants::SCREEN_HEIGHT / 2) * 0.3f; // Inverte Y
-        worldProfile.emplace_back(fabs(worldX), worldY);                 // Garante que X seja positivo (raio)
+
+        // Garante que X seja positivo (raio)
+        worldProfile.emplace_back(fabs(worldX), worldY);
     }
 
     object.updateProfile(worldProfile);
@@ -93,7 +97,8 @@ void Viewer3D::drawAxes() const
 
 void Viewer3D::drawGrid() const
 {
-    CV::color(0.2f, 0.2f, 0.2f); // Cinza bem escuro para a grade
+    // Cinza escuro para o fundo do grid
+    CV::color(0.2f, 0.2f, 0.2f);
 
     const float gridSize = 20.0f;
     const float gridRange = 100.0f;
@@ -121,51 +126,73 @@ void Viewer3D::render()
     drawGrid();
     drawAxes();
 
-    if (!object.isEmpty()) {
-        const auto &vertices = object.getVertices();
+    if (object.isEmpty()) {
+        return;
+    }
+    const auto &triangles = object.getTriangles();
 
-        if (!vertices.empty()) {
-            CV::color(1, 0, 1); // Amarelo para o objeto 3D
+    if (!triangles.empty()) {
 
-            int rotationSteps = object.getRotationSteps();
-            size_t profileSize = object.getProfileSize();
-
-            // Desenha linhas verticais (ao longo da curva de perfil)
-            for (int i = 0; i < rotationSteps; i++) {
-                if (vertices[i].size() > 1) {
-                    for (size_t j = 1; j < vertices[i].size(); j++) {
-                        Vector2 p1 = projectPoint(vertices[i][j - 1]);
-                        Vector2 p2 = projectPoint(vertices[i][j]);
-                        CV::line(p1.x, p1.y, p2.x, p2.y);
-                    }
-                }
+        if (surfaceMode) {
+            CV::color(0.7f, 0.7f, 1.0f);
+            for (const Triangle3D &triangle : triangles) {
+                drawTriangle(triangle);
             }
+        }
 
-            // Desenha linhas horizontais (entre rotações)
-            for (size_t j = 0; j < profileSize; j++) {
-                for (int i = 0; i < rotationSteps; i++) {
-                    int nextI = (i + 1) % rotationSteps;
+        if (wireframeMode) {
+            CV::color(0, 0, 0.7);
+            for (const Triangle3D &triangle : triangles) {
+                drawWireframe(triangle);
+            }
+        }
 
-                    if (j < vertices[i].size() && j < vertices[nextI].size()) {
-                        Vector2 p1 = projectPoint(vertices[i][j]);
-                        Vector2 p2 = projectPoint(vertices[nextI][j]);
-                        CV::line(p1.x, p1.y, p2.x, p2.y);
-                    }
-                }
+        if (normalsMode) {
+            CV::color(1, 1, 0);
+            for (const Triangle3D &triangle : triangles) {
+                drawNormal(triangle);
             }
         }
     }
 }
 
-void Viewer3D::handleMouse(int button, int state, int x, int y)
+void Viewer3D::drawTriangle(const Triangle3D &triangle) const
 {
-    //
+    Vector2 p1 = projectPoint(triangle.v1);
+    Vector2 p2 = projectPoint(triangle.v2);
+    Vector2 p3 = projectPoint(triangle.v3);
+
+    float vx[3] = {p1.x, p2.x, p3.x};
+    float vy[3] = {p1.y, p2.y, p3.y};
+    CV::polygonFill(vx, vy, 3);
 }
 
-void Viewer3D::handleMouseMotion(int x, int y)
+void Viewer3D::drawWireframe(const Triangle3D &triangle) const
 {
-    //
+    Vector2 p1 = projectPoint(triangle.v1);
+    Vector2 p2 = projectPoint(triangle.v2);
+    Vector2 p3 = projectPoint(triangle.v3);
+
+    CV::line(p1.x, p1.y, p2.x, p2.y);
+    CV::line(p2.x, p2.y, p3.x, p3.y);
+    CV::line(p3.x, p3.y, p1.x, p1.y);
 }
+
+void Viewer3D::drawNormal(const Triangle3D &triangle) const
+{
+    // Calcula o centro do triângulo
+    Vector3 center = (triangle.v1 + triangle.v2 + triangle.v3) * (1.0f / 3.0f);
+    Vector3 normalEnd = center + triangle.normal * 20.0f;
+
+    Vector2 centerProj = projectPoint(center);
+    Vector2 normalProj = projectPoint(normalEnd);
+
+    CV::line(centerProj.x, centerProj.y, normalProj.x, normalProj.y);
+}
+
+void Viewer3D::handleMouse(int button, int state, int x, int y) {}
+
+void Viewer3D::handleMouseMotion(int x, int y) {}
 
 void Viewer3D::handleKeyboard(int key)
 {
