@@ -1,7 +1,6 @@
 #ifndef CHECKBOX_H
 #define CHECKBOX_H
 
-#include "Config.h"
 #include "UIElement.h"
 #include "gl_canvas2d.h"
 
@@ -9,6 +8,7 @@ class Checkbox : public UIElement
 {
   private:
     bool checked;
+    bool wasPressed = false; // Para detectar click release
     float boxSize;
 
   public:

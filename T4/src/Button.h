@@ -1,7 +1,6 @@
 #ifndef BUTTON_H
 #define BUTTON_H
 
-#include "Config.h"
 #include "UIElement.h"
 
 class Button : public UIElement

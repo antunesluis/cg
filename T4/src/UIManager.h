@@ -21,7 +21,11 @@ class UIManager
                    std::function<void(float)> onChange);
 
     void render();
-    void handleMouse(int x, int y, int buttonState);
+    bool handleMouse(int x, int y, int buttonState); // Retorna true se houve interação
+
+    // Método para verificar se algum elemento está sendo usado
+    bool isInteracting() const;
+    const std::vector<UIElement *> &getElements() const { return elements; }
 };
 
 #endif

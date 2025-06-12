@@ -3,24 +3,48 @@
 #include <stdio.h>
 
 Editor::Editor(int width, int height)
-    : isDragging(false), selectedPoint(-1), viewer3D(Constants::PANEL_WIDTH, 0, Constants::PANEL_WIDTH, height)
+    : isDragging(false), selectedPoint(-1), viewer3D(Constants::PANEL_WIDTH, 0, Constants::PANEL_WIDTH, height),
+      uiManager(Constants::PANEL_WIDTH)
 {
     screenWidth = width;
     screenHeight = height;
 }
 
-void Editor::initialize() { initializeCurve(); }
+void Editor::initialize()
+{
+    initializeCurve();
+
+    uiManager.addButton(10, 10, 120, 30, "Reset", [this]() { resetCurve(); });
+
+    uiManager.addButton(150, 10, 280, 30, "Apagar ultimo ponto", [this]() {
+        if (bezierCurve.getControlPointCount() > 0) {
+            removeLastControlPoint();
+        }
+    });
+
+    uiManager.addButton(450, 10, 120, 30, "Reset View", [this]() { viewer3D.resetCamera(); });
+
+    uiManager.addCheckbox(10, 50, 20, "Wireframe", true, [this](bool checked) {
+        printf("Wireframe mode: %d\n", checked);
+        viewer3D.setWireframeMode(checked);
+    });
+
+    uiManager.addCheckbox(10, 80, 20, "Surface", true, [this](bool checked) { viewer3D.setSurfaceMode(checked); });
+
+    uiManager.addCheckbox(10, 110, 20, "Normals", false, [this](bool checked) { viewer3D.setNormalsMode(checked); });
+
+    uiManager.addSlider(150, 80, 150, 20, 3, 50, 20, "Voltas", [this](float value) {
+        int rotationSteps = static_cast<int>(round(value));
+        viewer3D.setRotationSteps(rotationSteps);
+        updateViewer3D();
+    });
+}
 
 void Editor::initializeCurve()
 {
     bezierCurve = BCurve2D();
     selectedPoint = -1;
     isDragging = false;
-
-    // bezierCurve.addControlPoint(Vector2(Constants::PANEL_WIDTH * 0.3f, screenHeight * 0.7f));
-    // bezierCurve.addControlPoint(Vector2(Constants::PANEL_WIDTH * 0.4f, screenHeight * 0.3f));
-    // bezierCurve.addControlPoint(Vector2(Constants::PANEL_WIDTH * 0.6f, screenHeight * 0.4f));
-    // bezierCurve.addControlPoint(Vector2(Constants::PANEL_WIDTH * 0.7f, screenHeight * 0.8f));
 
     updateViewer3D();
 }
@@ -54,22 +78,24 @@ void Editor::render()
 {
     CV::clear(0, 0, 0);
 
-    // painel da direita
+    // Painel da direita (3D)
     viewer3D.render();
 
-    // painel da esquerda
+    // Painel da esquerda (2D)
     CV::color(0.05f, 0.05f, 0.1f);
     CV::rectFill(0, 0, Constants::PANEL_WIDTH, screenHeight);
 
+    // Desenha a UI
+    uiManager.render();
+
+    // Restante do código (curva, eixos, etc.)
     if (!bezierCurve.isEmpty()) {
         bezierCurve.drawControlPoints(selectedPoint);
         bezierCurve.drawCurve();
     }
-
-    // Desenha informações e linha divisória
-    drawInfo();
     drawDivisionLine();
     drawAxes2D();
+    drawInfo();
 }
 
 void Editor::drawAxes2D()
@@ -77,14 +103,10 @@ void Editor::drawAxes2D()
     CV::color(0.5f, 0.5f, 0.5f);
     CV::line(0, screenHeight / 2, Constants::PANEL_WIDTH, screenHeight / 2);
     CV::color(0.5f, 0.5f, 0.5f);
-    CV::line(Constants::PANEL_WIDTH / 2, 0, Constants::PANEL_WIDTH / 2, screenHeight - 80);
+    CV::line(Constants::PANEL_WIDTH / 2, 60, Constants::PANEL_WIDTH / 2, screenHeight - 100);
 }
 
-void Editor::update()
-{
-    // Atualiza o viewer 3D sempre que necessário
-    bezierCurve.updateCurvePoints();
-}
+void Editor::update() { bezierCurve.updateCurvePoints(); }
 
 void Editor::drawInfo()
 {
@@ -118,16 +140,53 @@ void Editor::drawDivisionLine()
 
 void Editor::onMouse(int button, int state, int wheel, int direction, int x, int y)
 {
+    if (isIn2DPanel(x, y)) {
+        // Primeiro processa a UI
+        bool uiInteracted = uiManager.handleMouse(x, y, (button == 0) ? state : -1);
+
+        // Só processa a curva se não houve interação com UI E não está na área UI
+        if (!uiInteracted && !isInUIArea(x, y) && button == 0) {
+            handleMouseClick(button, state, x, y);
+        }
+    } else if (isIn3DPanel(x, y)) {
+        viewer3D.handleMouse(button, state, x, y);
+    }
+
     // Movimento do mouse
     if (button == -2 && state == -2) {
         handleMouseMotion(x, y);
     } else {
-        handleMouseClick(button, state, x, y);
+        bool uiInteracted = uiManager.handleMouse(x, y, (button == 0) ? state : -1);
+        if (!uiInteracted && !isInUIArea(x, y)) {
+            handleMouseClick(button, state, x, y);
+        }
     }
+}
+
+bool UIManager::isInteracting() const
+{
+    for (const auto element : elements) {
+        if (element->isHovered() || element->isPressed()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Editor::isInUIArea(int x, int y) const
+{
+    // Verifica se está dentro de qualquer elemento UI
+    for (const auto &element : uiManager.getElements()) {
+        if (element->isMouseOver(x, y)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Editor::handleMouseClick(int button, int state, int x, int y)
 {
+    printf("Mouse clicked at (%d, %d) with button %d and state %d\n", x, y, button, state);
     // Verifica se o clique foi no painel 2D
     if (isIn2DPanel(x, y)) {
         if (button == 0) {    // Botão esquerdo
@@ -165,8 +224,9 @@ void Editor::handleMouseMotion(int x, int y)
         Vector2 newPos(x, y);
         bezierCurve.updateControlPoint(selectedPoint, newPos);
         updateViewer3D();
-    } else if (isIn3DPanel(x, y)) {
-        // Se estiver no painel 3D, passa o movimento para o viewer
+    }
+    // Se estiver no painel 3D, passa o movimento para o viewer
+    else if (isIn3DPanel(x, y)) {
         viewer3D.handleMouseMotion(x, y);
     }
 }

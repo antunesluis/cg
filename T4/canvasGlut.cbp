@@ -41,10 +41,29 @@
 			<Add library="../lib/libopengl32.a"/>
 			<Add library="../lib/libglu32.a"/>
 		</Linker>
-		<Unit filename="src/Vector2.h" />
 		<Unit filename="src/gl_canvas2d.cpp" />
 		<Unit filename="src/gl_canvas2d.h" />
+        <Unit filename="src/Vector2.h" />
+		<Unit filename="src/Vector3.h" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/BezierCurve2D.cpp" />
+		<Unit filename="src/BezierCurve2D.h" />
+		<Unit filename="src/Button.cpp" />
+		<Unit filename="src/Button.h" />
+		<Unit filename="src/Checkbox.cpp" />
+		<Unit filename="src/Checkbox.h" />
+		<Unit filename="src/Constants.h" />
+		<Unit filename="src/Editor.cpp" />
+		<Unit filename="src/Editor.h" />
+		<Unit filename="src/Object3D.cpp" />
+		<Unit filename="src/Object3D.h" />
+		<Unit filename="src/Slider.cpp" />
+		<Unit filename="src/Slider.h" />
+		<Unit filename="src/UIElement.h" />
+		<Unit filename="src/UIManager.cpp" />
+		<Unit filename="src/UIManager.h" />
+		<Unit filename="src/Viewer3D.cpp" />
+		<Unit filename="src/Viewer3D.h" />
 
 	</Project>
 </CodeBlocks_project_file>

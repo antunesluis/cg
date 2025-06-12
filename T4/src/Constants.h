@@ -15,7 +15,7 @@ const float ROTATION_SPEED = 2.0;
 // Bézier
 const int DEFAULT_NUM_SAMPLES = 100.0;
 const int CONTROL_POINT_RADIUS = 6.0f;
-const int SELECTION_THRESHOLD = 10.0f;
+const int SELECTION_THRESHOLD = 10;
 
 // Objeto 3D
 const int MIN_ROTATION_STEPS = 3;

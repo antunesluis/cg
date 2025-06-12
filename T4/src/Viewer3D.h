@@ -4,6 +4,7 @@
 #include "Object3D.h"
 #include "Vector2.h"
 #include "Vector3.h"
+#include <cstdio>
 
 class Viewer3D
 {
@@ -63,6 +64,12 @@ class Viewer3D
     float getRotationY() const { return rotationY; }
     float getZoom() const { return zoom; }
     const Vector3 &getLightDirection() const { return lightDirection; }
+
+    void setWireframeMode(bool enabled) { wireframeMode = enabled; }
+    void setSurfaceMode(bool enabled) { surfaceMode = enabled; }
+    void setNormalsMode(bool enabled) { normalsMode = enabled; }
+
+    void setRotationSteps(int steps) { object.setRotationSteps(steps); }
 };
 
 #endif

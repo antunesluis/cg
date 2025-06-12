@@ -8,7 +8,7 @@ UIManager::UIManager(float panelWidth) : panelWidth(panelWidth) {}
 UIManager::~UIManager()
 {
     for (auto element : elements) {
-        delete element; // Limpeza manual
+        delete element;
     }
 }
 
@@ -23,6 +23,7 @@ void UIManager::addCheckbox(float x, float y, float size, const std::string &lab
                             std::function<void(bool)> onChange)
 {
     Checkbox *cb = new Checkbox(x, y, size, label, initial);
+    // Armazena o estado anterior para detectar mudanças
     cb->setOnClick([cb, onChange]() { onChange(cb->isChecked()); });
     elements.push_back(cb);
 }
@@ -41,9 +42,18 @@ void UIManager::render()
     }
 }
 
-void UIManager::handleMouse(int x, int y, int buttonState)
+bool UIManager::handleMouse(int x, int y, int buttonState)
 {
-    for (auto element : elements) {
-        element->checkInteraction(x, y, buttonState);
+    bool anyInteraction = false;
+
+    // Processa do último para o primeiro (para priorizar elementos no topo)
+    for (auto it = elements.rbegin(); it != elements.rend(); ++it) {
+        bool interacted = (*it)->checkInteraction(x, y, buttonState);
+        if (interacted) {
+            anyInteraction = true;
+            // Não break para permitir hover em múltiplos elementos
+        }
     }
+
+    return anyInteraction;
 }

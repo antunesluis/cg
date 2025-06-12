@@ -3,6 +3,7 @@
 
 #include "BezierCurve2D.h"
 #include "Constants.h"
+#include "UIManager.h"
 #include "Vector2.h"
 #include "Viewer3D.h"
 #include <vector>
@@ -10,7 +11,7 @@
 class Editor
 {
   private:
-    std::vector<BCurve2D> patches; // Lista de patches (curvas)
+    UIManager uiManager;
     BCurve2D bezierCurve;
     Viewer3D viewer3D;
 
@@ -51,6 +52,7 @@ class Editor
     void moveSelectedPoint(const Vector2 &newPosition);
     void deselectPoint();
 
+    bool isInUIArea(int x, int y) const;
     bool hasSelectedPoint() const { return selectedPoint != -1; }
     bool isEmpty() const;
 };

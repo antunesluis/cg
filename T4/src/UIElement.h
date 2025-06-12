@@ -11,6 +11,7 @@ class UIElement
     float x, y, width, height;
     bool hovered = false;
     bool pressed = false;
+    bool wasPressed = false; // Para detectar click release
     std::string label;
     std::function<void()> onClickCallback;
 
@@ -22,15 +23,21 @@ class UIElement
 
     virtual ~UIElement() = default;
 
-    // Métodos virtuais puros (obrigatórios para classes derivadas)
+    // Métodos virtuais puros
     virtual void render() const = 0;
     virtual bool checkInteraction(int mouseX, int mouseY, int buttonState) = 0;
 
-    // Métodos implementados inline (não precisam de .cpp)
+    // Métodos implementados
     void setOnClick(std::function<void()> callback) { onClickCallback = callback; }
 
     bool isHovered() const { return hovered; }
     bool isPressed() const { return pressed; }
+
+    // Método para verificar se o mouse está sobre o elemento
+    bool isMouseOver(int mouseX, int mouseY) const
+    {
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    }
 };
 
 #endif

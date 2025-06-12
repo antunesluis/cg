@@ -7,26 +7,24 @@ Checkbox::Checkbox(float x, float y, float size, const std::string &label, bool 
 
 void Checkbox::render() const
 {
-    // Caixa do checkbox
-    CV::color(config::colors::checkbox[0], config::colors::checkbox[1], config::colors::checkbox[2]);
+    // Caixa do checkbox (cinza escuro)
+    CV::color(0.4f, 0.4f, 0.4f);
     CV::rectFill(x, y, x + boxSize, y + boxSize);
 
-    // Borda
-    CV::color(config::colors::checkbox_border[0], config::colors::checkbox_border[1],
-              config::colors::checkbox_border[2]);
+    // Borda (branco quase puro)
+    CV::color(0.9f, 0.9f, 0.9f);
     CV::rect(x, y, x + boxSize, y + boxSize);
 
-    // Checkmark
+    // Checkmark (verde)
     if (checked) {
-        CV::color(config::colors::checkmark[0], config::colors::checkmark[1], config::colors::checkmark[2]);
+        CV::color(0.2f, 0.8f, 0.2f);
         CV::line(x + 3, y + boxSize / 2, x + boxSize / 2, y + boxSize - 3);
         CV::line(x + boxSize / 2, y + boxSize - 3, x + boxSize - 3, y + 3);
     }
 
-    // Label (se existir)
+    // Label (branco quase puro)
     if (!label.empty()) {
-        CV::color(config::colors::checkbox_border[0], config::colors::checkbox_border[1],
-                  config::colors::checkbox_border[2]);
+        CV::color(0.9f, 0.9f, 0.9f);
         CV::text(x + boxSize + 5, y + boxSize / 2 + 4, label.c_str());
     }
 }
@@ -34,12 +32,19 @@ void Checkbox::render() const
 bool Checkbox::checkInteraction(int mouseX, int mouseY, int buttonState)
 {
     bool wasChecked = checked;
+    hovered = isMouseOver(mouseX, mouseY);
 
-    if (buttonState == 0 && // Botão pressionado
-        mouseX >= x && mouseX <= x + boxSize && mouseY >= y && mouseY <= y + boxSize) {
+    if (buttonState == 0 && hovered) { // Botão pressionado
+        pressed = true;
+    } else if (buttonState == 1 && pressed && hovered) { // Botão solto
         checked = !checked;
+        printf("Checkbox clicado! Novo estado: %d\n", checked);
+        if (onClickCallback) {
+            onClickCallback(); // Dispara o callback
+        }
     }
 
+    pressed = (buttonState == 0) ? pressed : false;
     return (checked != wasChecked);
 }
 

@@ -7,7 +7,7 @@
 
 Viewer3D::Viewer3D(int x, int y, int width, int height)
     : viewportX(x), viewportY(y), viewportWidth(width), viewportHeight(height), rotationX(-0.3f), rotationY(0.3f),
-      zoom(1.5f), offset(width / 2, height / 2), object(Constants::DEFAULT_ROTATION_STEPS), wireframeMode(true),
+      zoom(3.0f), offset(width / 2, height / 2), object(Constants::DEFAULT_ROTATION_STEPS), wireframeMode(true),
       surfaceMode(true), normalsMode(false)
 {
 }
@@ -141,7 +141,7 @@ void Viewer3D::render()
         }
 
         if (wireframeMode) {
-            CV::color(0, 0, 0.7);
+            CV::color(0.1, 0.1, 0.5);
             for (const Triangle3D &triangle : triangles) {
                 drawWireframe(triangle);
             }
@@ -218,11 +218,11 @@ void Viewer3D::handleKeyboard(int key)
         break;
     case 'q':
     case 'Q':
-        zoomCamera(1.0f);
+        zoomCamera(2.0f);
         break;
     case 'e':
     case 'E':
-        zoomCamera(-1.0f);
+        zoomCamera(-2.0f);
         break;
     case 'r':
     case 'R':
@@ -248,13 +248,13 @@ void Viewer3D::zoomCamera(float delta)
     zoom += delta * 0.1f;
     if (zoom < 0.3f)
         zoom = 0.3f;
-    if (zoom > 4.0f)
-        zoom = 4.0f;
+    if (zoom > 13.0f)
+        zoom = 13.0f;
 }
 
 void Viewer3D::resetCamera()
 {
     rotationX = -0.3f;
     rotationY = 0.3f;
-    zoom = 1.5f;
+    zoom = 3.0f;
 }

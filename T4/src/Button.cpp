@@ -9,7 +9,7 @@ void Button::render() const
     if (pressed) {
         CV::color(0.2f, 0.5f, 0.8f);
     } else if (hovered) {
-        CV::color(config::colors::button_hover[0], config::colors::button_hover[1], config::colors::button_hover[2]);
+        CV::color(0.3f, 0.3f, 0.4f);
     } else {
         CV::color(0.25f, 0.25f, 0.3f);
     }
@@ -21,23 +21,27 @@ void Button::render() const
 
     // Texto centralizado com sombra
     CV::color(0.0f, 0.0f, 0.0f);
-    CV::text(x + (width - label.length() * 8) / 2 + 1, y + height / 2 + 5, label.c_str());
+    CV::text(x + (width - label.length() * 10) / 2 + 1, y + height / 2 + 5, label.c_str());
 
     CV::color(1.0f, 1.0f, 1.0f);
-    CV::text(x + (width - label.length() * 8) / 2, y + height / 2 + 4, label.c_str());
+    CV::text(x + (width - label.length() * 10) / 2, y + height / 2 + 4, label.c_str());
 }
 
 bool Button::checkInteraction(int mouseX, int mouseY, int buttonState)
 {
-    hovered = (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height);
+    hovered = isMouseOver(mouseX, mouseY);
 
     if (buttonState == 0) { // Botão pressionado
-        pressed = hovered;
-    } else if (buttonState == 1 && pressed && hovered) { // Botão solto
-        if (onClickCallback) {
+        if (hovered) {
+            pressed = true;
+            wasPressed = true;
+        }
+    } else if (buttonState == 1) { // Botão solto
+        if (pressed && hovered && wasPressed && onClickCallback) {
             onClickCallback();
         }
         pressed = false;
+        wasPressed = false;
     }
 
     return hovered || pressed;
