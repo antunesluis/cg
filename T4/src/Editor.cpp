@@ -165,9 +165,8 @@ void Editor::handleMouseMotion(int x, int y)
         Vector2 newPos(x, y);
         bezierCurve.updateControlPoint(selectedPoint, newPos);
         updateViewer3D();
-    }
-    // Se estiver no painel 3D, passa o movimento para o viewer
-    else if (isIn3DPanel(x, y)) {
+    } else if (isIn3DPanel(x, y)) {
+        // Se estiver no painel 3D, passa o movimento para o viewer
         viewer3D.handleMouseMotion(x, y);
     }
 }

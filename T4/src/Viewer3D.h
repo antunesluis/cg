@@ -20,14 +20,19 @@ class Viewer3D
     int viewportX, viewportY;
     int viewportWidth, viewportHeight;
 
-    bool wireframeMode = false;
-    bool surfaceMode = true;
-    bool normalsMode = false;
+    bool wireframeMode;
+    bool surfaceMode;
+    bool normalsMode;
+    bool shadowsEnabled;
+    Vector3 lightDirection;
 
     // Projeção
     Vector2 projectPoint(const Vector3 &point3D) const;
     void drawAxes() const;
     void drawGrid() const;
+    void drawShadows(const std::vector<Triangle3D> &triangles) const;
+    Vector3 projectPointOnPlane(const Vector3 &point, const Vector3 &lightDir, const Vector3 &planeNormal,
+                                float planeD) const;
 
     void drawTriangle(const Triangle3D &triangle) const;
     void drawWireframe(const Triangle3D &triangle) const;
@@ -48,6 +53,8 @@ class Viewer3D
     void rotateCamera(float deltaX, float deltaY);
     void zoomCamera(float delta);
     void resetCamera();
+    void toggleShadows() { shadowsEnabled = !shadowsEnabled; }
+    void setLightDirection(const Vector3 &dir) { lightDirection = dir.normalized(); }
 
     bool isEmpty() const { return object.isEmpty(); }
 
@@ -55,6 +62,7 @@ class Viewer3D
     float getRotationX() const { return rotationX; }
     float getRotationY() const { return rotationY; }
     float getZoom() const { return zoom; }
+    const Vector3 &getLightDirection() const { return lightDirection; }
 };
 
 #endif

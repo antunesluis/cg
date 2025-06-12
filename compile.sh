@@ -22,6 +22,9 @@ SOURCES=(
     "Editor.cpp"
     "Object3D.cpp"
     "Viewer3D.cpp"
+    "Button.cpp"
+    "UIManager.cpp"
+    "Checkbox.cpp"
 )
 
 # Compilação

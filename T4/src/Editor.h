@@ -10,6 +10,7 @@
 class Editor
 {
   private:
+    std::vector<BCurve2D> patches; // Lista de patches (curvas)
     BCurve2D bezierCurve;
     Viewer3D viewer3D;
 
@@ -30,6 +31,8 @@ class Editor
 
     bool isIn2DPanel(int x, int y) const;
     bool isIn3DPanel(int x, int y) const;
+
+    int currentPatchIndex = 0; // Patch atualmente selecionado
 
   public:
     Editor(int width, int height);
