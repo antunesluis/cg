@@ -42,23 +42,49 @@ class Vector3
         z /= norm;
     }
 
-    Vector3 operator-(const Vector3 &v)
+    // CORREÇÃO: Mantém apenas versão const para evitar ambiguidade
+    Vector3 operator-(const Vector3 &v) const
     {
         Vector3 aux(x - v.x, y - v.y, z - v.z);
-        return (aux);
+        return aux;
     }
 
-    Vector3 operator+(const Vector3 &v)
+    Vector3 operator+(const Vector3 &v) const
     {
         Vector3 aux(x + v.x, y + v.y, z + v.z);
-        return (aux);
+        return aux;
     }
 
-    Vector3 operator*(const double v) { return Vector3(x * v, y * v, z * v); }
+    Vector3 operator*(const double v) const { return Vector3(x * v, y * v, z * v); }
 
-    Vector3 operator*(const int v) { return Vector3(x * v, y * v, z * v); }
+    Vector3 operator*(const float v) const { return Vector3(x * v, y * v, z * v); }
 
-    Vector3 operator*(const Vector3 &v) { return Vector3(x * v.x, y * v.y, z * v.z); }
+    Vector3 operator*(const int v) const { return Vector3(x * v, y * v, z * v); }
+
+    Vector3 operator*(const Vector3 &v) const { return Vector3(x * v.x, y * v.y, z * v.z); }
+
+    // CORREÇÃO: Adicionar produto escalar (dot product)
+    float dot(const Vector3 &v) const { return x * v.x + y * v.y + z * v.z; }
+
+    // CORREÇÃO: Adicionar produto vetorial (cross product)
+    Vector3 cross(const Vector3 &v) const { return Vector3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x); }
+
+    // CORREÇÃO: Adicionar magnitude
+    float magnitude() const { return sqrt(x * x + y * y + z * z); }
+
+    // CORREÇÃO: Adicionar operador de atribuição
+    Vector3 &operator=(const Vector3 &v)
+    {
+        x = v.x;
+        y = v.y;
+        z = v.z;
+        return *this;
+    }
+
+    // CORREÇÃO: Adicionar operadores de comparação
+    bool operator==(const Vector3 &v) const { return (x == v.x && y == v.y && z == v.z); }
+
+    bool operator!=(const Vector3 &v) const { return !(*this == v); }
 };
 
 #endif

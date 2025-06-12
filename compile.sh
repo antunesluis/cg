@@ -20,6 +20,8 @@ SOURCES=(
     "gl_canvas2d.cpp"
     "BezierCurve2D.cpp"
     "Editor.cpp"
+    "Object3D.cpp"
+    "Viewer3D.cpp"
 )
 
 # Compilação

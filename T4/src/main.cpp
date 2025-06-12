@@ -10,6 +10,7 @@ void render()
 {
     if (editor) {
         editor->render();
+        editor->update();
     }
 }
 

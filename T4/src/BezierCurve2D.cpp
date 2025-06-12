@@ -33,7 +33,7 @@ void BCurve2D::updateCurvePoints()
 
     const int NUM_SAMPLES = Constants::DEFAULT_NUM_SAMPLES;
     curvePoints.clear();
-    curvePoints.reserve(NUM_SAMPLES + 1); // Otimização: reserva espaço
+    curvePoints.reserve(NUM_SAMPLES + 1);
 
     for (int i = 0; i <= NUM_SAMPLES; i++) {
         float t = (float)i / NUM_SAMPLES;
@@ -45,7 +45,7 @@ void BCurve2D::updateCurvePoints()
 int BCurve2D::binomialCoefficient(int n, int k) const
 {
     if (k > n - k)
-        k = n - k; // Otimização: C(n,k) = C(n,n-k)
+        k = n - k;
 
     int result = 1;
     for (int i = 0; i < k; i++) {
@@ -90,7 +90,7 @@ void BCurve2D::drawCurve() const
     if (controlPoints.size() < 2)
         return;
 
-    // Força atualização se necessário (método const precisa de cast)
+    // Força atualização se necessário
     if (needsUpdate) {
         const_cast<BCurve2D *>(this)->updateCurvePoints();
     }
@@ -111,9 +111,9 @@ void BCurve2D::drawControlPoints(int selectedIndex) const
 
     const float POINT_RADIUS = Constants::CONTROL_POINT_RADIUS;
 
-    // Desenha linhas entre os pontos de controle (polígono de controle)
+    // Desenha linhas entre os pontos de controle
     if (controlPoints.size() > 1) {
-        CV::color(0.5, 0.5, 0.5); // Cinza para as linhas
+        CV::color(0.5, 0.5, 0.5);
         for (size_t i = 0; i < controlPoints.size() - 1; i++) {
             CV::line(controlPoints[i].x, controlPoints[i].y, controlPoints[i + 1].x, controlPoints[i + 1].y);
         }
@@ -121,7 +121,6 @@ void BCurve2D::drawControlPoints(int selectedIndex) const
 
     // Desenha os pontos de controle
     for (size_t i = 0; i < controlPoints.size(); i++) {
-        // Destaca o ponto selecionado
         if ((int)i == selectedIndex) {
             CV::color(1, 0, 0); // Vermelho para ponto selecionado
             CV::circleFill(controlPoints[i].x, controlPoints[i].y, POINT_RADIUS + 2, 20);
@@ -133,13 +132,12 @@ void BCurve2D::drawControlPoints(int selectedIndex) const
         // Rótulo do ponto
         char label[10];
         sprintf(label, "P%zu", i);
-        CV::color(1, 1, 1); // Branco para o texto
+        CV::color(1, 1, 1);
         CV::text(controlPoints[i].x + 12, controlPoints[i].y + 12, label);
     }
 }
 
 size_t BCurve2D::getControlPointCount() const { return controlPoints.size(); }
-
 size_t BCurve2D::getCurvePointCount() const { return curvePoints.size(); }
 
 void BCurve2D::clearControlPoints()

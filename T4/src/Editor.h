@@ -4,12 +4,15 @@
 #include "BezierCurve2D.h"
 #include "Constants.h"
 #include "Vector2.h"
+#include "Viewer3D.h"
 #include <vector>
 
 class Editor
 {
   private:
     BCurve2D bezierCurve;
+    Viewer3D viewer3D;
+
     bool isDragging;
     int selectedPoint;
 
@@ -20,6 +23,13 @@ class Editor
     void drawInfo();
     void handleMouseClick(int button, int state, int x, int y);
     void handleMouseMotion(int x, int y);
+    void drawDivisionLine();
+    void drawAxes2D();
+
+    void updateViewer3D();
+
+    bool isIn2DPanel(int x, int y) const;
+    bool isIn3DPanel(int x, int y) const;
 
   public:
     Editor(int width, int height);
