@@ -38,7 +38,6 @@ bool Checkbox::checkInteraction(int mouseX, int mouseY, int buttonState)
         pressed = true;
     } else if (buttonState == 1 && pressed && hovered) { // Botão solto
         checked = !checked;
-        printf("Checkbox clicado! Novo estado: %d\n", checked);
         if (onClickCallback) {
             onClickCallback(); // Dispara o callback
         }

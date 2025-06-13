@@ -24,10 +24,7 @@ void Editor::initialize()
 
     uiManager.addButton(450, 10, 120, 30, "Reset View", [this]() { viewer3D.resetCamera(); });
 
-    uiManager.addCheckbox(10, 50, 20, "Wireframe", true, [this](bool checked) {
-        printf("Wireframe mode: %d\n", checked);
-        viewer3D.setWireframeMode(checked);
-    });
+    uiManager.addCheckbox(10, 50, 20, "Wireframe", true, [this](bool checked) { viewer3D.setWireframeMode(checked); });
 
     uiManager.addCheckbox(10, 80, 20, "Surface", true, [this](bool checked) { viewer3D.setSurfaceMode(checked); });
 
@@ -186,7 +183,6 @@ bool Editor::isInUIArea(int x, int y) const
 
 void Editor::handleMouseClick(int button, int state, int x, int y)
 {
-    printf("Mouse clicked at (%d, %d) with button %d and state %d\n", x, y, button, state);
     // Verifica se o clique foi no painel 2D
     if (isIn2DPanel(x, y)) {
         if (button == 0) {    // Botão esquerdo
