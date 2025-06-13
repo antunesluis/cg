@@ -1,6 +1,8 @@
 #include "Object3D.h"
 #include <math.h>
 
+constexpr double MY_PI = 3.14159265358979323846;
+
 Object3D::Object3D(int steps) : rotationSteps(steps), needsUpdate(true)
 {
     vertices.clear();
@@ -50,7 +52,7 @@ void Object3D::generateVertices()
     vertices.clear();
     vertices.resize(rotationSteps);
 
-    float angleStep = (2.0f * M_PI) / rotationSteps;
+    float angleStep = (2.0f * MY_PI) / rotationSteps;
 
     for (int i = 0; i < rotationSteps; i++) {
         float angle = i * angleStep;

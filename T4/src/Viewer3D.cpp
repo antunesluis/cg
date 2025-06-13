@@ -3,7 +3,7 @@
 #include "Object3D.h"
 #include "gl_canvas2d.h"
 #include <math.h>
-#include <stdio.h>
+constexpr double MY_PI = 3.14159265358979323846;
 
 Viewer3D::Viewer3D(int x, int y, int width, int height)
     : viewportX(x), viewportY(y), viewportWidth(width), viewportHeight(height), rotationX(-0.3f), rotationY(0.3f),
@@ -237,10 +237,10 @@ void Viewer3D::rotateCamera(float deltaX, float deltaY)
     rotationX += deltaY * Constants::ROTATION_SENSITIVITY;
 
     // Limita a rotação em X
-    if (rotationX > M_PI / 2)
-        rotationX = M_PI / 2;
-    if (rotationX < -M_PI / 2)
-        rotationX = -M_PI / 2;
+    if (rotationX > MY_PI / 2)
+        rotationX = MY_PI / 2;
+    if (rotationX < -MY_PI / 2)
+        rotationX = -MY_PI / 2;
 }
 
 void Viewer3D::zoomCamera(float delta)
