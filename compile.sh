@@ -2,7 +2,7 @@
 
 # Configurações
 EXECUTABLE="./editor.o"
-SRC_DIR="./T4/src"
+SRC_DIR="./T5/src"
 INCLUDE_DIR="./include"
 OBJ_DIR="./obj" # Novo diretório para objetos
 LIBS="-lGL -lGLU -lglut -lm"
@@ -16,16 +16,7 @@ rm -f "$OBJ_DIR"/*.o "$EXECUTABLE"
 
 # Lista de arquivos para compilar
 SOURCES=(
-    "main.cpp"
-    "gl_canvas2d.cpp"
-    "BezierCurve2D.cpp"
-    "Editor.cpp"
-    "Object3D.cpp"
-    "Viewer3D.cpp"
-    "Button.cpp"
-    "UIManager.cpp"
-    "Checkbox.cpp"
-    "Slider.cpp"
+    "lookat.cpp"
 )
 
 # Compilação
