@@ -16,7 +16,11 @@ rm -f "$OBJ_DIR"/*.o "$EXECUTABLE"
 
 # Lista de arquivos para compilar
 SOURCES=(
-    "lookat.cpp"
+    "main.cpp"
+    "Asteroid.cpp"
+    "Camera.cpp"
+    "Scene.cpp"
+    "HUD.cpp"
 )
 
 # Compilação
