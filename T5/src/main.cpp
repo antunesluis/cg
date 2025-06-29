@@ -3,24 +3,23 @@
 #include <ctime>
 
 #include "Camera.h"
+#include "HUD.h"
 #include "Scene.h"
 #include "Vector3.h"
 
-// Constantes da aplicação
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HEIGHT = 720;
 const float TARGET_FPS = 60.0f;
 const float FRAME_TIME = 1000.0f / TARGET_FPS;
 
-// Estados globais
 bool wireframeMode = false;
-bool keys[256] = {false}; // Estado das teclas
+bool keys[256] = {false};
 float lastTime = 0;
 float deltaTime = 0;
 
-// Objetos principais
 Camera *camera = nullptr;
 Scene *scene = nullptr;
+HUD *hud = nullptr;
 
 // Controle de FPS
 float lastFrameTime = 0;
@@ -37,18 +36,18 @@ void calculateFPS()
         frameCount = 0;
         lastFrameTime = currentTime;
 
-        // Atualiza título da janela com FPS
-        char title[100];
-        sprintf(title, "Guerra nas Estrelas - FPS: %.1f", fps);
-        glutSetWindowTitle(title);
+        // Atualizar FPS no HUD
+        if (hud) {
+            hud->setFPS(fps);
+        }
     }
 }
 
 void setupLighting()
 {
     // Habilita iluminação
-    glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHTING);
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
@@ -81,15 +80,19 @@ void init()
     gluPerspective(60.0, (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1, 1000.0);
     glMatrixMode(GL_MODELVIEW);
 
-    // Configurar iluminação
     setupLighting();
 
-    // Inicializar objetos
     camera = new Camera(Vector3(0, 0, 10), Vector3(0, 0, -1), Vector3(0, 1, 0));
     scene = new Scene();
-    scene->generateAsteroids(50, 200.0f); // 50 asteroides em área de 200x200x200
+    scene->generateAsteroids(100, 200.0f); // 50 asteroides em área de 200x200x200
 
-    // Configurar modo de polígono inicial
+    // Inicializar HUD
+    hud = new HUD(SCREEN_WIDTH, SCREEN_HEIGHT);
+    hud->setTextColor(0.0f, 1.0f, 0.0f);             // Verde para texto
+    hud->setCrosshairColor(1.0f, 0.0f, 0.0f);        // Vermelho para mira
+    hud->setBackgroundColor(0.0f, 0.0f, 0.0f, 0.6f); // Fundo semi-transparente
+
+    // Configura modo de polígono inicial
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     srand(time(nullptr));
@@ -107,7 +110,11 @@ void display()
     // Renderizar cena
     scene->render(camera->getPosition(), wireframeMode);
 
-    // Calcular FPS
+    // Renderizar HUD por último
+    if (hud) {
+        hud->render(camera->getPosition(), wireframeMode, scene->getAsteroidCount(), fps);
+    }
+
     calculateFPS();
 
     glutSwapBuffers();
@@ -132,9 +139,9 @@ void update()
 
     // Movimento da câmera
     if (keys['w'] || keys['W'])
-        movement.z -= moveSpeed; // Frente
+        movement.z += moveSpeed; // Frente
     if (keys['s'] || keys['S'])
-        movement.z += moveSpeed; // Trás
+        movement.z -= moveSpeed; // Trás
     if (keys['a'] || keys['A'])
         movement.x -= moveSpeed; // Esquerda
     if (keys['d'] || keys['D'])
@@ -146,13 +153,13 @@ void update()
 
     // Rotação da câmera
     if (keys['i'] || keys['I'])
-        rotation.x -= rotSpeed; // Pitch up
+        rotation.x += rotSpeed; // Pitch up
     if (keys['k'] || keys['K'])
-        rotation.x += rotSpeed; // Pitch down
+        rotation.x -= rotSpeed; // Pitch down
     if (keys['j'] || keys['J'])
-        rotation.y -= rotSpeed; // Yaw left
+        rotation.y += rotSpeed; // Yaw left
     if (keys['l'] || keys['L'])
-        rotation.y += rotSpeed; // Yaw right
+        rotation.y -= rotSpeed; // Yaw right
     if (keys['u'] || keys['U'])
         rotation.z -= rotSpeed; // Roll left
     if (keys['o'] || keys['O'])
@@ -176,6 +183,7 @@ void keyboard(unsigned char key, int x, int y)
     case 27: // ESC
         delete camera;
         delete scene;
+        delete hud; // Limpar HUD
         exit(0);
         break;
 
@@ -186,6 +194,14 @@ void keyboard(unsigned char key, int x, int y)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         } else {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        break;
+
+    case 'h':
+    case 'H':
+        // Toggle HUD
+        if (hud) {
+            hud->toggle();
         }
         break;
 
@@ -201,7 +217,6 @@ void keyboardUp(unsigned char key, int x, int y) { keys[key] = false; }
 
 void specialKeys(int key, int x, int y)
 {
-    // Mapeamento das setas para WASD alternativo
     switch (key) {
     case GLUT_KEY_UP:
         keys['w'] = true;
@@ -254,6 +269,7 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
     glutInitWindowPosition(100, 100);
+    glutCreateWindow("Guerra nas Estrelas - T5");
 
     init();
 
