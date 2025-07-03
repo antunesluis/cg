@@ -8,6 +8,7 @@
 #ifndef HUD_H
 #define HUD_H
 
+#include "Scene.h"
 #include "Vector3.h"
 #include <GL/glut.h>
 #include <string>

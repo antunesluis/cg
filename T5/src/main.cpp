@@ -1,7 +1,9 @@
 #include <GL/glut.h>
 #include <cstdlib>
 #include <ctime>
+#include <windows.h>
 
+#include "AudioSystem.h"
 #include "Camera.h"
 #include "HUD.h"
 #include "Scene.h"
@@ -17,6 +19,7 @@ bool keys[256] = {false};
 float lastTime = 0;
 float deltaTime = 0;
 
+AudioSystem *audioSystem = nullptr;
 Camera *camera = nullptr;
 Scene *scene = nullptr;
 HUD *hud = nullptr;
@@ -67,6 +70,11 @@ void setupLighting()
 
 void init()
 {
+    audioSystem = new AudioSystem();
+    if (audioSystem) {
+        audioSystem->playBackgroundMusic("background.wav", true);
+    }
+
     // Configurações básicas do OpenGL
     glClearColor(0.05f, 0.05f, 0.15f, 1.0f); // Cor de fundo espacial
     glEnable(GL_DEPTH_TEST);
@@ -183,7 +191,8 @@ void keyboard(unsigned char key, int x, int y)
     case 27: // ESC
         delete camera;
         delete scene;
-        delete hud; // Limpar HUD
+        delete hud;
+        delete audioSystem;
         exit(0);
         break;
 
@@ -209,6 +218,13 @@ void keyboard(unsigned char key, int x, int y)
     case 'R':
         // Reset da câmera
         camera->reset(Vector3(0, 0, 10), Vector3(0, 0, -1), Vector3(0, 1, 0));
+        break;
+
+    case 'm':
+    case 'M':
+        if (audioSystem) {
+            audioSystem->toggleBackgroundMusic();
+        }
         break;
     }
 }

@@ -38,6 +38,9 @@ Todos os requisitos obrigatórios foram implementados, além de funcionalidades 
   - HUD com informações em tempo real (FPS, posição, modo de renderização)
   - Crosshair central para auxiliar na navegação
 
+- Sistema de Sons:
+  - Música de fundo tocando continuamente durante a navegação
+
 ## Manual de Uso
 
 ### Controles da Nave/Câmera
